@@ -1,0 +1,7 @@
+server:
+    socket: /var/run/campaner.sock
+    confirmation: XXXXXXXX
+
+log:
+  prod: true
+  output: /var/log/capmaner.log
