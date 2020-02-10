@@ -1,19 +1,15 @@
 package command
 
-import "github.com/sepuka/campaner/internal/context"
+import (
+	"net/http"
+
+	"github.com/sepuka/campaner/internal/context"
+)
 
 type HandlerMap map[string]Executor
 
-type Result struct {
-	response string
-}
-
-func (o *Result) SetResponse(response string) {
-	o.response = response
-}
-
 type Executor interface {
-	Exec(*context.Request, *Result) error
+	Exec(*context.Request, http.ResponseWriter) error
 }
 
 type Preceptable interface {

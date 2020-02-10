@@ -1,13 +1,15 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/sepuka/campaner/internal/command"
 	"github.com/sepuka/campaner/internal/context"
 )
 
-type HandlerFunc func(command.Executor, *context.Request, *command.Result) error
+type HandlerFunc func(command.Executor, *context.Request, http.ResponseWriter) error
 
-func final(handler command.Executor, req *context.Request, resp *command.Result) error {
+func final(handler command.Executor, req *context.Request, resp http.ResponseWriter) error {
 	return handler.Exec(req, resp)
 }
 

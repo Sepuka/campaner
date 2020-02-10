@@ -1,6 +1,8 @@
 package command
 
 import (
+	"net/http"
+
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/context"
 )
@@ -15,15 +17,14 @@ func NewConfirmation(cfg config.Server) *Confirmation {
 	}
 }
 
-func (o *Confirmation) Exec(req *context.Request, resp *Result) error {
-	resp.SetResponse(o.cfg.Confirmation)
+func (o *Confirmation) Exec(req *context.Request, resp http.ResponseWriter) error {
+	_, err := resp.Write([]byte(o.cfg.Confirmation))
 
-	return nil
+	return err
 }
 
 func (o *Confirmation) Precept() []string {
 	return []string{
-		`remind`,
-		`напомни`,
+		`confirmation`,
 	}
 }

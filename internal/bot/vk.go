@@ -1,10 +1,13 @@
 package bot
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"net/http/fcgi"
 	"os"
+
+	"github.com/sepuka/campaner/internal/context"
 
 	"github.com/sepuka/campaner/internal/config"
 
@@ -35,24 +38,25 @@ func NewBot(
 	}
 }
 
-func (o *Bot) Listen() error {
-	socket := o.cfg.Socket
+func (obj *Bot) Listen() error {
+	socket := obj.cfg.Socket
 	defer os.Remove(socket)
 
 	l, err := net.Listen(`unix`, socket)
 	if err != nil {
 		return err
 	}
-	fs := new(FCgiServer)
 
-	return fcgi.Serve(l, fs)
+	return fcgi.Serve(l, obj)
 }
 
-type (
-	FCgiServer struct{}
-)
+func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var (
+		callback = &context.Request{}
+		decoder  = json.NewDecoder(r.Body)
+		err      error
+	)
 
-func (this *FCgiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	defer func() {
 		if err := recover(); err != nil {
@@ -60,5 +64,24 @@ func (this *FCgiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(`500 Server error`))
 		}
 	}()
-	w.Write([]byte(`OK Server<br>text`))
+
+	obj.logger.Info(`incoming request`)
+
+	if err = decoder.Decode(callback); err != nil {
+		if _, err = w.Write([]byte(`invalid json`)); err != nil {
+			obj.logger.Errorf(`cannot write error message about invalid incoming json %s`, err)
+		}
+		w.WriteHeader(400)
+
+		return
+	}
+
+	if finalHandler, ok := obj.commands[callback.Type]; ok {
+		obj.handler(finalHandler, callback, w)
+	} else {
+		if _, err = w.Write([]byte(`unknown type field`)); err != nil {
+			obj.logger.Errorf(`cannot write error message about unknown type field %s`, err)
+		}
+		w.WriteHeader(400)
+	}
 }
