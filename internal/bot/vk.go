@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"net/http/fcgi"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/pkg/errors"
 
 	"github.com/sepuka/campaner/internal/context"
 
@@ -39,15 +43,45 @@ func NewBot(
 }
 
 func (obj *Bot) Listen() error {
-	socket := obj.cfg.Socket
-	defer os.Remove(socket)
+	var (
+		socket   = obj.cfg.Socket
+		signals  = make(chan os.Signal, 1)
+		stop     = make(chan error, 1)
+		listener net.Listener
+		err      error
+	)
 
-	l, err := net.Listen(`unix`, socket)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
+	listener, err = net.Listen(`unix`, socket)
 	if err != nil {
+		obj.logger.Errorf(`cannot listen to unix socket: %s`, err)
 		return err
 	}
 
-	return fcgi.Serve(l, obj)
+	defer func() error {
+		return os.Remove(socket)
+	}()
+
+	go func() {
+		<-signals
+		if err = listener.Close(); err != nil {
+			stop <- errors.Wrap(err, `unable to close HTTP connection`)
+		}
+	}()
+
+	go obj.server(listener, stop)
+
+	err = <-stop
+
+	return err
+}
+
+func (obj *Bot) server(listener net.Listener, c chan<- error) {
+	if err := fcgi.Serve(listener, obj); err != nil {
+		obj.logger.Errorf(`cannot to serve accept connections: %s`, err)
+		c <- err
+	}
 }
 
 func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
