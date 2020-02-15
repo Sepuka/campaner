@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
+	"net/http/httputil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -87,7 +88,9 @@ func (obj *Bot) server(listener net.Listener, c chan<- error) {
 func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		callback = &context.Request{}
+		clone    []byte
 		decoder  = json.NewDecoder(r.Body)
+		output   = []byte(`ok`)
 		err      error
 	)
 
@@ -99,7 +102,20 @@ func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	obj.logger.Info(`incoming request`)
+	if clone, err = httputil.DumpRequest(r, true); err != nil {
+		obj.
+			logger.
+			Errorf(`unable to dump request: %s`, err)
+		panic(`invalid request`)
+	}
+
+	obj.
+		logger.
+		With(
+			zap.String(`host`, r.Host),
+			zap.ByteString(`body`, clone),
+		).
+		Infof(`incoming %s-request to %s`, r.Method, r.URL.Path)
 
 	if err = decoder.Decode(callback); err != nil {
 		if _, err = w.Write([]byte(`invalid json`)); err != nil {
@@ -111,9 +127,11 @@ func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if finalHandler, ok := obj.commands[callback.Type]; ok {
-		obj.handler(finalHandler, callback, w)
+		if err = obj.handler(finalHandler, callback, w); err != nil {
+			obj.logger.Errorf(`error while handling request: %s`, err)
+		}
 	} else {
-		if _, err = w.Write([]byte(`unknown type field`)); err != nil {
+		if _, err = w.Write(output); err != nil {
 			obj.logger.Errorf(`cannot write error message about unknown type field %s`, err)
 		}
 		w.WriteHeader(400)
