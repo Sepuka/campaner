@@ -89,7 +89,6 @@ func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		callback = &context.Request{}
 		clone    []byte
-		decoder  = json.NewDecoder(r.Body)
 		output   = []byte(`ok`)
 		err      error
 	)
@@ -117,7 +116,7 @@ func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		).
 		Infof(`incoming %s-request to %s`, r.Method, r.URL.Path)
 
-	if err = decoder.Decode(callback); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(callback); err != nil {
 		if _, err = w.Write([]byte(`invalid json`)); err != nil {
 			obj.logger.Errorf(`cannot write error message about invalid incoming json %s`, err)
 		}
