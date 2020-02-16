@@ -14,9 +14,14 @@ type (
 		Output string
 	}
 
+	Api struct {
+		Token string
+	}
+
 	Config struct {
 		Server Server
 		Log    Log
+		Api    Api
 	}
 )
 

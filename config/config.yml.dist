@@ -3,5 +3,8 @@ server:
     confirmation: XXXXXXXX
 
 log:
-  prod: true
-  output: /var/log/capmaner.log
+    prod: true
+    output: /var/log/capmaner.log
+
+api:
+    token: XXX

@@ -88,8 +88,8 @@ func (obj *Bot) server(listener net.Listener, c chan<- error) {
 func (obj *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
 		callback = &context.Request{}
-		clone    []byte
 		output   = []byte(`ok`)
+		clone    []byte
 		err      error
 	)
 
