@@ -15,3 +15,6 @@ build:
 build_rpi:
 	GOOS=linux GOARCH=arm GOARM=7 \
 	go build -o $(PROGRAM_NAME)
+
+tests:
+	go test ./...

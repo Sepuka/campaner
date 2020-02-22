@@ -2,10 +2,12 @@ package command
 
 import (
 	"github.com/sarulabs/di"
+	analyzer3 "github.com/sepuka/campaner/internal/analyzer"
 	api3 "github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/command"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
+	analyzer2 "github.com/sepuka/campaner/internal/def/analyzer"
 	api2 "github.com/sepuka/campaner/internal/def/api"
 	"github.com/sepuka/campaner/internal/def/log"
 	"go.uber.org/zap"
@@ -27,11 +29,12 @@ func init() {
 			},
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
-					api    = ctx.Get(api2.SendMessageDef).(*api3.SendMessage)
-					logger = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
+					api      = ctx.Get(api2.SendMessageDef).(*api3.SendMessage)
+					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
+					analyzer = ctx.Get(analyzer2.AnalyzerDef).(*analyzer3.Analyzer)
 				)
 
-				return command.NewMessageNew(cfg.Server, api, logger), nil
+				return command.NewMessageNew(cfg.Server, api, logger, analyzer), nil
 			},
 		})
 	})
