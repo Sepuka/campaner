@@ -15,7 +15,7 @@ type (
 	}
 
 	Api struct {
-		Token string
+		Token string `default:"???_there_is_the_access_api_token"`
 	}
 
 	Config struct {
