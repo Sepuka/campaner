@@ -74,6 +74,10 @@ func (obj *MessageNew) send(reminder *analyzer.Reminder) {
 		err error
 	)
 
+	if reminder.When() > 3 {
+		obj.confirmMsg(reminder.When(), reminder.Whom())
+	}
+
 	time.Sleep(reminder.When())
 
 	if err = obj.api.Send(reminder.Whom(), reminder.What()); err != nil {
@@ -84,6 +88,27 @@ func (obj *MessageNew) send(reminder *analyzer.Reminder) {
 				zap.Error(err),
 			).
 			Error(`send api message error`)
+	}
+}
+
+func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
+	var (
+		err              error
+		text             string
+		notifyTmpl       = `напомню об этом %d.%2d в %2d:%2d`
+		notificationTime = time.Now().Add(delay)
+	)
+
+	text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
+
+	if err = obj.api.Send(whom, text); err != nil {
+		obj.
+			logger.
+			With(
+				zap.String(`text`, text),
+				zap.Error(err),
+			).
+			Error(`send api message error (confirmation)`)
 	}
 }
 
