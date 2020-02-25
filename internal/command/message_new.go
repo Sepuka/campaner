@@ -74,9 +74,7 @@ func (obj *MessageNew) send(reminder *analyzer.Reminder) {
 		err error
 	)
 
-	if reminder.When() > 3 {
-		obj.confirmMsg(reminder.When(), reminder.Whom())
-	}
+	go obj.confirmMsg(reminder.When(), reminder.Whom())
 
 	time.Sleep(reminder.When())
 
@@ -93,13 +91,30 @@ func (obj *MessageNew) send(reminder *analyzer.Reminder) {
 
 func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 	var (
-		err              error
-		text             string
-		notifyTmpl       = `напомню об этом %d.%2d в %2d:%2d`
-		notificationTime = time.Now().Add(delay)
+		err  error
+		text string
+
+		notificationTime  = time.Now().Add(delay)
+		now               = time.Now()
+		todayMidnight     = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
+		yesterdayMidnight = todayMidnight.Add(time.Hour * 24)
 	)
 
-	text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
+	if delay <= 3*time.Second {
+		return
+	}
+
+	switch {
+	case notificationTime.Before(todayMidnight):
+		notifyTmpl := `напомню сегодня в %02d:%02d`
+		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
+	case notificationTime.Before(yesterdayMidnight):
+		notifyTmpl := `напомню завтра в %02d:%02d`
+		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
+	default:
+		notifyTmpl := `напомню об этом %d.%02d в %02d:%02d`
+		text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
+	}
 
 	if err = obj.api.Send(whom, text); err != nil {
 		obj.
