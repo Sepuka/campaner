@@ -76,7 +76,9 @@ func (obj *MessageNew) send(reminder *analyzer.Reminder) {
 		err error
 	)
 
-	go obj.confirmMsg(reminder.When(), reminder.Whom())
+	if !reminder.IsImmediate() {
+		go obj.confirmMsg(reminder.When(), reminder.Whom())
+	}
 
 	time.Sleep(reminder.When())
 
@@ -100,10 +102,6 @@ func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 		todayMidnight     = calendar.NextMidnight()
 		yesterdayMidnight = calendar.LastMidnight()
 	)
-
-	if delay <= 3*time.Second {
-		return
-	}
 
 	switch {
 	case notificationTime.Before(todayMidnight):

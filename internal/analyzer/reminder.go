@@ -2,6 +2,8 @@ package analyzer
 
 import "time"
 
+const toShortTime = 5 * time.Second
+
 type Reminder struct {
 	when time.Duration
 	whom int
@@ -35,4 +37,8 @@ func (r *Reminder) When() time.Duration {
 
 func (r *Reminder) What() string {
 	return r.what
+}
+
+func (r *Reminder) IsImmediate() bool {
+	return r.when < toShortTime
 }
