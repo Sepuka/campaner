@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sepuka/campaner/internal/calendar"
+
 	"github.com/sepuka/campaner/internal/analyzer"
 
 	"go.uber.org/zap"
@@ -95,9 +97,8 @@ func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 		text string
 
 		notificationTime  = time.Now().Add(delay)
-		now               = time.Now()
-		todayMidnight     = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, now.Location())
-		yesterdayMidnight = todayMidnight.Add(time.Hour * 24)
+		todayMidnight     = calendar.NextMidnight()
+		yesterdayMidnight = calendar.LastMidnight()
 	)
 
 	if delay <= 3*time.Second {

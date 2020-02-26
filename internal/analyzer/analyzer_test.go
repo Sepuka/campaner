@@ -61,8 +61,8 @@ func TestNewAnalyzer(t *testing.T) {
 
 	for testName, testCase := range testCases {
 		testError := fmt.Sprintf(`test "%s" error`, testName)
-		actualReminder, err := analyzer.Analyze(testCase.words)
-		assert.InDelta(t, testCase.reminder.when.Seconds(), actualReminder.when.Seconds(), 1, testError)
+		err := analyzer.Analyze(testCase.words, testCase.reminder)
+		assert.InDelta(t, testCase.reminder.when.Seconds(), testCase.reminder.when.Seconds(), 1, testError)
 		assert.NoError(t, err, testError)
 	}
 }
