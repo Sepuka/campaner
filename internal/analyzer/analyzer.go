@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -9,6 +10,7 @@ const MaxWordsLength = 100
 type Parser interface {
 	Parse([]string, *Reminder) ([]string, error)
 	Glossary() []string
+	PatternList() []string
 }
 
 type Glossary map[string]Parser
@@ -23,21 +25,18 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 	}
 }
 
-func (obj *Analyzer) Analyze(text string, reminder *Reminder) error {
-	var (
-		err error
-	)
-
+func (obj *Analyzer) Analyze(text string, reminder *Reminder) {
 	words := strings.SplitN(text, ` `, MaxWordsLength)
-	err = obj.buildReminder(words, reminder)
-	reminder.what = text
+	obj.buildReminder(words, reminder)
 
-	return err
+	if reminder.what == `` {
+		reminder.what = text
+	}
 }
 
-func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) error {
+func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) {
 	if len(words) == 0 {
-		return nil
+		return
 	}
 
 	var (
@@ -46,11 +45,16 @@ func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) error {
 	)
 	if parser, ok := obj.glossary[words[0]]; ok {
 		if rest, err = parser.Parse(words, reminder); err != nil {
-			return err
+			var (
+				patterns = strings.Join(parser.PatternList(), "\n")
+				what     = fmt.Sprintf("use known format, for instance: %s\n", patterns)
+			)
+			reminder = NewImmediateReminder(reminder.Whom(), what)
+			return
 		}
 	} else {
 		rest = words[1:]
 	}
 
-	return obj.buildReminder(rest, reminder)
+	obj.buildReminder(rest, reminder)
 }

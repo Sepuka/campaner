@@ -118,3 +118,11 @@ func (obj *TimeParser) Glossary() []string {
 		`в`,
 	}
 }
+
+func (obj *TimeParser) PatternList() []string {
+	return []string{
+		`через минуту попить воды`,
+		`через 48 секунд позвонить маме`,
+		`в 13:45 сходить на обед`,
+	}
+}

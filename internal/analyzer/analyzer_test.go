@@ -50,19 +50,29 @@ func TestNewAnalyzer(t *testing.T) {
 			reminder: &Reminder{},
 		},
 		`напомни мне через 25 секунд что-то сделать`: {
-			words:    `напомни мне через 25 секунд что-то сделать`,
-			reminder: &Reminder{when: time.Duration(25) * time.Second},
+			words: `напомни мне через 25 секунд что-то сделать`,
+			reminder: &Reminder{
+				when: time.Duration(25) * time.Second,
+				what: `напомни мне через 25 секунд что-то сделать`,
+			},
 		},
 		`напомни в 22:15 что-то сделать`: {
-			words:    `напомни в 22:15 что-то сделать`,
-			reminder: &Reminder{when: time.Since(nextDateTime)},
+			words: `напомни в 22:15 что-то сделать`,
+			reminder: &Reminder{
+				when: time.Since(nextDateTime),
+				what: `напомни в 22:15 что-то сделать`,
+			},
 		},
 	}
 
 	for testName, testCase := range testCases {
-		testError := fmt.Sprintf(`test "%s" error`, testName)
-		err := analyzer.Analyze(testCase.words, testCase.reminder)
-		assert.InDelta(t, testCase.reminder.when.Seconds(), testCase.reminder.when.Seconds(), 1, testError)
-		assert.NoError(t, err, testError)
+		var (
+			testError        = fmt.Sprintf(`test "%s" error`, testName)
+			expectedReminder = testCase.reminder
+			actualReminder   = &Reminder{}
+		)
+		analyzer.Analyze(testCase.words, actualReminder)
+		assert.InDelta(t, expectedReminder.When().Seconds(), actualReminder.When().Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.What(), actualReminder.What(), testError)
 	}
 }

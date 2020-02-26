@@ -40,29 +40,15 @@ func NewMessageNew(
 
 func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) error {
 	var (
-		output     = []byte(`ok`)
-		text       = req.Object.Message.Text
-		analyzeErr = fmt.Sprintf(`bad request: %s`, text)
-		err        error
-		reminder   = analyzer.NewReminder(
+		err      error
+		output   = []byte(`ok`)
+		text     = req.Object.Message.Text
+		reminder = analyzer.NewReminder(
 			int(req.Object.Message.PeerId),
 		)
 	)
 
-	err = obj.analyzer.Analyze(text, reminder)
-	if err != nil {
-		reminder = analyzer.NewImmediateReminder(int(req.Object.Message.PeerId), analyzeErr)
-		obj.
-			logger.
-			With(
-				zap.String(`text`, text),
-				zap.Error(err),
-			).
-			Error(`parse msg error`)
-	}
-	if reminder.When() == 0 {
-		reminder = analyzer.NewImmediateReminder(int(req.Object.Message.PeerId), req.Object.Message.Text)
-	}
+	obj.analyzer.Analyze(text, reminder)
 
 	go obj.send(reminder)
 
@@ -105,8 +91,8 @@ func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 
 	switch {
 	case notificationTime.Before(todayMidnight):
-		notifyTmpl := `напомню сегодня в %02d:%02d`
-		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
+		notifyTmpl := `напомню сегодня в %02d:%02d:%02d`
+		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute(), notificationTime.Second())
 	case notificationTime.Before(yesterdayMidnight):
 		notifyTmpl := `напомню завтра в %02d:%02d`
 		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
