@@ -106,7 +106,7 @@ func (obj *TimeParser) onTimeParser(words []string) (time.Duration, []string, er
 		}
 		exactTime = time.Date(current.Year(), current.Month(), day, exactTime.Hour(), exactTime.Minute(), 0, 0, time.Local)
 
-		return time.Since(exactTime), words[1:], nil
+		return time.Until(exactTime), words[1:], nil
 	default:
 		return 0, words, unrecognizedPatterError
 	}
