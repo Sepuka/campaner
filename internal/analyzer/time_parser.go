@@ -37,13 +37,14 @@ func (obj *TimeParser) Parse(words []string, reminder *Reminder) ([]string, erro
 		duration time.Duration
 		rest     []string
 		err      error
+		word     string
 	)
 
 	if len(words) == 0 {
 		return words, nil
 	}
 
-	var word = words[0]
+	word = words[0]
 	switch {
 	case obj.overTime[word]:
 		duration, rest, err = obj.overTimeParser(words[1:])

@@ -124,7 +124,7 @@ func TestOnTimeParser(t *testing.T) {
 			words: []string{`в`, `15:00`, `совершить`, `действие`},
 			rest:  []string{`совершить`, `действие`},
 			reminder: &Reminder{
-				when: time.Since(nextDateTime),
+				when: time.Until(nextDateTime),
 			},
 		},
 	}

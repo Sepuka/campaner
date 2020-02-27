@@ -42,3 +42,7 @@ func (r *Reminder) What() string {
 func (r *Reminder) IsImmediate() bool {
 	return r.when < toShortTime
 }
+
+func (r *Reminder) isValid() bool {
+	return r.when > 0
+}

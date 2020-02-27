@@ -47,9 +47,9 @@ func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) {
 		if rest, err = parser.Parse(words, reminder); err != nil {
 			var (
 				patterns = strings.Join(parser.PatternList(), "\n")
-				what     = fmt.Sprintf("use known format, for instance: %s\n", patterns)
+				what     = fmt.Sprintf("use known format, for instance:\n%s\n", patterns)
 			)
-			reminder = NewImmediateReminder(reminder.Whom(), what)
+			*reminder = *NewImmediateReminder(reminder.Whom(), what)
 			return
 		}
 	} else {
