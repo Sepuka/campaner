@@ -87,6 +87,13 @@ func TestOverTimeParser(t *testing.T) {
 				when: time.Hour,
 			},
 		},
+		`через 1.5 часа`: {
+			words: []string{`через`, `1.5`, `часа`, `действие`},
+			rest:  []string{`действие`},
+			reminder: &Reminder{
+				when: 90 * time.Minute,
+			},
+		},
 		`через 2 часа`: {
 			words: []string{`через`, `2`, `часа`, `действие`},
 			rest:  []string{`действие`},

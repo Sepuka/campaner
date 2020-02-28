@@ -4,8 +4,9 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/sepuka/campaner/internal/domain"
 )
 
 var (
@@ -61,31 +62,29 @@ func (obj *TimeParser) Parse(words []string, reminder *Reminder) ([]string, erro
 
 func (obj *TimeParser) overTimeParser(words []string) (time.Duration, []string, error) {
 	var (
-		number   int
-		quantity string
-		idx      int
+		value      float64
+		dimension  string
+		restOffset int
+		err        error
+		timeFrame  *domain.TimeFrame
+		duration   time.Duration
 	)
 
-	number, err := strconv.Atoi(words[0])
-	if err != nil {
-		number = 1
-		quantity = words[0]
-		idx = 1
+	if value, err = strconv.ParseFloat(words[0], 32); err != nil {
+		value = 1
+		dimension = words[0]
+		restOffset = 1
 	} else {
-		quantity = words[1]
-		idx = 2
+		dimension = words[1]
+		restOffset = 2
 	}
 
-	switch {
-	case strings.HasPrefix(quantity, `секунд`):
-		return time.Duration(number) * time.Second, words[idx:], nil
-	case strings.HasPrefix(quantity, `минут`):
-		return time.Duration(number) * time.Minute, words[idx:], nil
-	case strings.HasPrefix(quantity, `час`):
-		return time.Duration(number) * time.Hour, words[idx:], nil
-	default:
-		return 0, words, unrecognizedPatterError
+	timeFrame = domain.NewTimeFrame(value, dimension)
+	if duration, err = timeFrame.GetDuration(); err != nil {
+		return duration, words, err
 	}
+
+	return duration, words[restOffset:], nil
 }
 
 func (obj *TimeParser) onTimeParser(words []string) (time.Duration, []string, error) {

@@ -49,6 +49,12 @@ func TestNewAnalyzer(t *testing.T) {
 			words:    ``,
 			reminder: &Reminder{},
 		},
+		`unknown pattern`: {
+			words: `abc`,
+			reminder: &Reminder{
+				what: `abc`,
+			},
+		},
 		`напомни мне через 25 секунд что-то сделать`: {
 			words: `напомни мне через 25 секунд что-то сделать`,
 			reminder: &Reminder{
@@ -59,7 +65,7 @@ func TestNewAnalyzer(t *testing.T) {
 		`напомни в 22:15 что-то сделать`: {
 			words: `напомни в 22:15 что-то сделать`,
 			reminder: &Reminder{
-				when: time.Since(nextDateTime),
+				when: time.Until(nextDateTime),
 				what: `напомни в 22:15 что-то сделать`,
 			},
 		},
