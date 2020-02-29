@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/domain"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,31 +45,23 @@ func TestNewAnalyzer(t *testing.T) {
 
 	var testCases = map[string]struct {
 		words    string
-		reminder *Reminder
+		reminder *domain.Reminder
 	}{
 		`empty rest when empty words`: {
 			words:    ``,
-			reminder: &Reminder{},
+			reminder: &domain.Reminder{},
 		},
 		`unknown pattern`: {
-			words: `abc`,
-			reminder: &Reminder{
-				what: `abc`,
-			},
+			words:    `abc`,
+			reminder: domain.NewReminder(0, `abc`, time.Nanosecond),
 		},
 		`напомни мне через 25 секунд что-то сделать`: {
-			words: `напомни мне через 25 секунд что-то сделать`,
-			reminder: &Reminder{
-				when: time.Duration(25) * time.Second,
-				what: `напомни мне через 25 секунд что-то сделать`,
-			},
+			words:    `напомни мне через 25 секунд что-то сделать`,
+			reminder: domain.NewReminder(0, `напомни мне через 25 секунд что-то сделать`, time.Duration(25)*time.Second),
 		},
 		`напомни в 22:15 что-то сделать`: {
-			words: `напомни в 22:15 что-то сделать`,
-			reminder: &Reminder{
-				when: time.Until(nextDateTime),
-				what: `напомни в 22:15 что-то сделать`,
-			},
+			words:    `напомни в 22:15 что-то сделать`,
+			reminder: domain.NewReminder(0, `напомни в 22:15 что-то сделать`, time.Until(nextDateTime)),
 		},
 	}
 
@@ -75,7 +69,7 @@ func TestNewAnalyzer(t *testing.T) {
 		var (
 			testError        = fmt.Sprintf(`test "%s" error`, testName)
 			expectedReminder = testCase.reminder
-			actualReminder   = &Reminder{}
+			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
 		)
 		analyzer.Analyze(testCase.words, actualReminder)
 		assert.InDelta(t, expectedReminder.When().Seconds(), actualReminder.When().Seconds(), 1, testError)

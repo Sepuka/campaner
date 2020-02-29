@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sepuka/campaner/internal/domain"
+
 	"github.com/sepuka/campaner/internal/calendar"
 
 	"github.com/sepuka/campaner/internal/analyzer"
@@ -43,8 +45,10 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 		err      error
 		output   = []byte(`ok`)
 		text     = req.Object.Message.Text
-		reminder = analyzer.NewReminder(
+		reminder = domain.NewReminder(
 			int(req.Object.Message.PeerId),
+			text,
+			time.Nanosecond,
 		)
 	)
 
@@ -57,7 +61,7 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	return err
 }
 
-func (obj *MessageNew) send(reminder *analyzer.Reminder) {
+func (obj *MessageNew) send(reminder *domain.Reminder) {
 	var (
 		err error
 	)

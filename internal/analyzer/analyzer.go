@@ -3,12 +3,14 @@ package analyzer
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sepuka/campaner/internal/domain"
 )
 
 const MaxWordsLength = 100
 
 type Parser interface {
-	Parse([]string, *Reminder) ([]string, error)
+	Parse([]string, *domain.Reminder) ([]string, error)
 	Glossary() []string
 	PatternList() []string
 }
@@ -25,16 +27,12 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 	}
 }
 
-func (obj *Analyzer) Analyze(text string, reminder *Reminder) {
+func (obj *Analyzer) Analyze(text string, reminder *domain.Reminder) {
 	words := strings.SplitN(text, ` `, MaxWordsLength)
 	obj.buildReminder(words, reminder)
-
-	if reminder.what == `` {
-		reminder.what = text
-	}
 }
 
-func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) {
+func (obj *Analyzer) buildReminder(words []string, reminder *domain.Reminder) {
 	if len(words) == 0 {
 		return
 	}
@@ -49,7 +47,7 @@ func (obj *Analyzer) buildReminder(words []string, reminder *Reminder) {
 				patterns = strings.Join(parser.PatternList(), "\n")
 				what     = fmt.Sprintf("use known format, for instance:\n%s\n", patterns)
 			)
-			*reminder = *NewImmediateReminder(reminder.Whom(), what)
+			*reminder = *domain.NewImmediateReminder(reminder.Whom(), what)
 			return
 		}
 	} else {

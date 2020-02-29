@@ -1,4 +1,4 @@
-package analyzer
+package domain
 
 import "time"
 
@@ -10,9 +10,11 @@ type Reminder struct {
 	what string
 }
 
-func NewReminder(whom int) *Reminder {
+func NewReminder(whom int, what string, when time.Duration) *Reminder {
 	return &Reminder{
 		whom: whom,
+		what: what,
+		when: when,
 	}
 }
 
@@ -31,6 +33,10 @@ func (r *Reminder) Whom() int {
 	return r.whom
 }
 
+func (r *Reminder) SetWhen(when time.Duration) {
+	r.when = when
+}
+
 func (r *Reminder) When() time.Duration {
 	return r.when
 }
@@ -43,6 +49,6 @@ func (r *Reminder) IsImmediate() bool {
 	return r.when < toShortTime
 }
 
-func (r *Reminder) isValid() bool {
+func (r *Reminder) IsValid() bool {
 	return r.when > 0
 }

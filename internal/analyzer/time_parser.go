@@ -33,7 +33,7 @@ func NewTimeParser() *TimeParser {
 	}
 }
 
-func (obj *TimeParser) Parse(words []string, reminder *Reminder) ([]string, error) {
+func (obj *TimeParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
 		duration time.Duration
 		rest     []string
@@ -55,7 +55,7 @@ func (obj *TimeParser) Parse(words []string, reminder *Reminder) ([]string, erro
 		rest = words
 	}
 
-	reminder.when = duration
+	reminder.SetWhen(duration)
 
 	return rest, err
 }

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/sepuka/campaner/internal/domain"
+
 	"github.com/sepuka/campaner/internal/calendar"
 )
 
@@ -14,7 +16,7 @@ func NewDateParser() *DateParser {
 	return &DateParser{}
 }
 
-func (obj *DateParser) Parse(words []string, reminder *Reminder) ([]string, error) {
+func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
 		word      = words[0]
 		offset    = 1
@@ -39,9 +41,9 @@ func (obj *DateParser) Parse(words []string, reminder *Reminder) ([]string, erro
 	if exactTime, err = date.GetTime(exactly); err != nil {
 		exactTime = date.GetMorning()
 	}
-	reminder.when = time.Until(exactTime)
+	reminder.SetWhen(time.Until(exactTime))
 
-	if !reminder.isValid() {
+	if !reminder.IsValid() {
 		return words, errors.New(`date is not valid`)
 	}
 
