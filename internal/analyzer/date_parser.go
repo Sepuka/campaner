@@ -41,7 +41,7 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	if exactTime, err = date.GetTime(exactly); err != nil {
 		exactTime = date.GetMorning()
 	}
-	reminder.SetWhen(time.Until(exactTime))
+	reminder.When = time.Until(exactTime)
 
 	if !reminder.IsValid() {
 		return words, errors.New(`date is not valid`)

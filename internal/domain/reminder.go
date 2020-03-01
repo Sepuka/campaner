@@ -1,20 +1,35 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/go-pg/pg/orm"
+)
 
 const toShortTime = 5 * time.Second
 
-type Reminder struct {
-	when time.Duration
-	whom int
-	what string
-}
+type (
+	ReminderRepository interface {
+		Persist(reminder *Reminder) error
+	}
+
+	Reminder struct {
+		ReminderId int       `pg:",pk"`
+		CreatedAt  time.Time `pg:"default:now()"`
+		Whom       int       `sql:"user_id"`
+		What       string    `sql:"content",pg:"notnull"`
+		NotifyAt   time.Time
+		When       time.Duration `sql:"-"`
+	}
+)
 
 func NewReminder(whom int, what string, when time.Duration) *Reminder {
 	return &Reminder{
-		whom: whom,
-		what: what,
-		when: when,
+		Whom: whom,
+		What: what,
+		When: when,
 	}
 }
 
@@ -23,32 +38,27 @@ func NewImmediateReminder(
 	what string,
 ) *Reminder {
 	return &Reminder{
-		when: time.Nanosecond,
-		whom: whom,
-		what: what,
+		When: time.Nanosecond,
+		Whom: whom,
+		What: what,
 	}
 }
 
-func (r *Reminder) Whom() int {
-	return r.whom
-}
+func (r *Reminder) BeforeInsert(ctx context.Context, db orm.DB) error {
+	if r.When == 0 {
+		return errors.New(`"when" column is not initialized`)
+	}
 
-func (r *Reminder) SetWhen(when time.Duration) {
-	r.when = when
-}
+	r.NotifyAt = time.Now().Add(r.When)
+	r.CreatedAt = time.Now()
 
-func (r *Reminder) When() time.Duration {
-	return r.when
-}
-
-func (r *Reminder) What() string {
-	return r.what
+	return nil
 }
 
 func (r *Reminder) IsImmediate() bool {
-	return r.when < toShortTime
+	return r.When < toShortTime
 }
 
 func (r *Reminder) IsValid() bool {
-	return r.when > 0
+	return r.When > 0
 }

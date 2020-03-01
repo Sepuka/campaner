@@ -10,6 +10,8 @@ import (
 	analyzer2 "github.com/sepuka/campaner/internal/def/analyzer"
 	api2 "github.com/sepuka/campaner/internal/def/api"
 	"github.com/sepuka/campaner/internal/def/log"
+	"github.com/sepuka/campaner/internal/def/repository"
+	"github.com/sepuka/campaner/internal/domain"
 	"go.uber.org/zap"
 )
 
@@ -32,9 +34,10 @@ func init() {
 					api      = ctx.Get(api2.SendMessageDef).(*api3.SendMessage)
 					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
 					analyzer = ctx.Get(analyzer2.AnalyzerDef).(*analyzer3.Analyzer)
+					repo     = ctx.Get(repository.ReminderRepoDef).(domain.ReminderRepository)
 				)
 
-				return command.NewMessageNew(cfg.Server, api, logger, analyzer), nil
+				return command.NewMessageNew(cfg.Server, api, logger, analyzer, repo), nil
 			},
 		})
 	})

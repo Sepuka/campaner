@@ -72,7 +72,7 @@ func TestNewAnalyzer(t *testing.T) {
 			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
 		)
 		analyzer.Analyze(testCase.words, actualReminder)
-		assert.InDelta(t, expectedReminder.When().Seconds(), actualReminder.When().Seconds(), 1, testError)
-		assert.Equal(t, expectedReminder.What(), actualReminder.What(), testError)
+		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
 	}
 }

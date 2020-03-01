@@ -55,7 +55,7 @@ func (obj *TimeParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 		rest = words
 	}
 
-	reminder.SetWhen(duration)
+	reminder.When = duration
 
 	return rest, err
 }

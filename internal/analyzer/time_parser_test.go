@@ -121,7 +121,7 @@ func TestOnTimeParser(t *testing.T) {
 		actualReminder := &domain.Reminder{}
 		rest, err := parser.Parse(testCase.words, actualReminder)
 		assert.Equal(t, testCase.rest, rest, testError)
-		assert.InDelta(t, testCase.reminder.When().Seconds(), actualReminder.When().Seconds(), 1, testError)
+		assert.InDelta(t, testCase.reminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.NoError(t, err, testError)
 	}
 }

@@ -22,6 +22,15 @@ type (
 		Server Server
 		Log    Log
 		Api    Api
+		Db     Database
+	}
+
+	Database struct {
+		User     string
+		Password string
+		Name     string
+		Host     string
+		Port     int
 	}
 )
 

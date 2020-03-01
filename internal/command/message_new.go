@@ -20,10 +20,11 @@ import (
 )
 
 type MessageNew struct {
-	cfg      config.Server
-	api      *api.SendMessage
-	logger   *zap.SugaredLogger
-	analyzer *analyzer.Analyzer
+	cfg          config.Server
+	api          *api.SendMessage
+	logger       *zap.SugaredLogger
+	analyzer     *analyzer.Analyzer
+	reminderRepo domain.ReminderRepository
 }
 
 func NewMessageNew(
@@ -31,12 +32,14 @@ func NewMessageNew(
 	api *api.SendMessage,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
+	repo domain.ReminderRepository,
 ) *MessageNew {
 	return &MessageNew{
-		cfg:      cfg,
-		api:      api,
-		logger:   logger,
-		analyzer: analyzer,
+		cfg:          cfg,
+		api:          api,
+		logger:       logger,
+		analyzer:     analyzer,
+		reminderRepo: repo,
 	}
 }
 
@@ -53,6 +56,14 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	)
 
 	obj.analyzer.Analyze(text, reminder)
+	if err = obj.reminderRepo.Persist(reminder); err != nil {
+		obj.
+			logger.
+			With(
+				zap.Error(err),
+			).
+			Error(`cannot save reminder`)
+	}
 
 	go obj.send(reminder)
 
@@ -67,16 +78,16 @@ func (obj *MessageNew) send(reminder *domain.Reminder) {
 	)
 
 	if !reminder.IsImmediate() {
-		go obj.confirmMsg(reminder.When(), reminder.Whom())
+		go obj.confirmMsg(reminder.When, reminder.Whom)
 	}
 
-	time.Sleep(reminder.When())
+	time.Sleep(reminder.When)
 
-	if err = obj.api.Send(reminder.Whom(), reminder.What()); err != nil {
+	if err = obj.api.Send(reminder.Whom, reminder.What); err != nil {
 		obj.
 			logger.
 			With(
-				zap.String(`text`, reminder.What()),
+				zap.String(`text`, reminder.What),
 				zap.Error(err),
 			).
 			Error(`send api message error`)
