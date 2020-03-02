@@ -18,7 +18,7 @@ import (
 
 const (
 	apiVersion  = `5.103`
-	apiEndpoint = `https://api.vk.com/method/`
+	apiEndpoint = `https://api.vk.com/method`
 	apiMethod   = `messages.send`
 )
 

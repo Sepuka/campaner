@@ -15,12 +15,10 @@ import (
 
 	"github.com/sepuka/campaner/internal/api"
 
-	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/context"
 )
 
 type MessageNew struct {
-	cfg          config.Server
 	api          *api.SendMessage
 	logger       *zap.SugaredLogger
 	analyzer     *analyzer.Analyzer
@@ -28,14 +26,12 @@ type MessageNew struct {
 }
 
 func NewMessageNew(
-	cfg config.Server,
 	api *api.SendMessage,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
 	repo domain.ReminderRepository,
 ) *MessageNew {
 	return &MessageNew{
-		cfg:          cfg,
 		api:          api,
 		logger:       logger,
 		analyzer:     analyzer,
@@ -65,33 +61,13 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 			Error(`cannot save reminder`)
 	}
 
-	go obj.send(reminder)
-
-	_, err = resp.Write(output)
-
-	return err
-}
-
-func (obj *MessageNew) send(reminder *domain.Reminder) {
-	var (
-		err error
-	)
-
 	if !reminder.IsImmediate() {
 		go obj.confirmMsg(reminder.When, reminder.Whom)
 	}
 
-	time.Sleep(reminder.When)
+	_, err = resp.Write(output)
 
-	if err = obj.api.Send(reminder.Whom, reminder.What); err != nil {
-		obj.
-			logger.
-			With(
-				zap.String(`text`, reminder.What),
-				zap.Error(err),
-			).
-			Error(`send api message error`)
-	}
+	return err
 }
 
 func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {

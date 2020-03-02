@@ -8,19 +8,19 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand(workerCmd)
 }
 
 var (
-	serverCmd = &cobra.Command{
-		Use: `server`,
+	workerCmd = &cobra.Command{
+		Use: `worker`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			botListener, err := def.Container.SafeGet(bot.ListenerDef)
+			botWorker, err := def.Container.SafeGet(bot.WorkerDef)
 			if err != nil {
 				return err
 			}
 
-			return botListener.(*bot2.Bot).Listen()
+			return botWorker.(*bot2.Worker).Work()
 		},
 	}
 )

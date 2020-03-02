@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	BotDef = `def.bot`
+	ListenerDef = `def.bot.listener`
 )
 
 func init() {
 	def.Register(func(builder *di.Builder, cfg *config.Config) error {
 		return builder.Add(di.Def{
-			Name: BotDef,
+			Name: ListenerDef,
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
 					logger     = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)

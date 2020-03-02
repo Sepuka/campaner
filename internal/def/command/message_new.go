@@ -37,7 +37,7 @@ func init() {
 					repo     = ctx.Get(repository.ReminderRepoDef).(domain.ReminderRepository)
 				)
 
-				return command.NewMessageNew(cfg.Server, api, logger, analyzer, repo), nil
+				return command.NewMessageNew(api, logger, analyzer, repo), nil
 			},
 		})
 	})

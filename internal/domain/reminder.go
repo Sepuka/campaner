@@ -13,6 +13,7 @@ const toShortTime = 5 * time.Second
 type (
 	ReminderRepository interface {
 		Persist(reminder *Reminder) error
+		FindActual(timestamp time.Time) ([]Reminder, error)
 	}
 
 	Reminder struct {
