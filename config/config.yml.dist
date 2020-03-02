@@ -4,7 +4,6 @@ server:
 
 log:
     prod: true
-    output: /var/log/capmaner.log
 
 api:
     token: XXX

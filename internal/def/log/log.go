@@ -31,12 +31,12 @@ func init() {
 					fileEncoderConfig zapcore.EncoderConfig
 				)
 
-				fileSinker, closeOut, err := zap.Open(cfg.Log.Output)
+				fileSyncer, closeOut, err := zap.Open(`stdout`)
 				if err != nil {
 					return nil, errPkg.Wrap(err, `unable to open output files`)
 				}
 
-				writeSyncer := zapcore.AddSync(fileSinker)
+				writeSyncer := zapcore.AddSync(fileSyncer)
 
 				consoleMsgLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 					if cfg.Log.Prod {
@@ -54,7 +54,7 @@ func init() {
 					fileEncoderConfig = zap.NewDevelopmentEncoderConfig()
 				}
 
-				zapCfg.OutputPaths = []string{cfg.Log.Output}
+				zapCfg.OutputPaths = []string{`stdout`}
 
 				fileEncoder = zapcore.NewJSONEncoder(fileEncoderConfig)
 				core = zapcore.NewTee(

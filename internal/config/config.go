@@ -10,8 +10,7 @@ type (
 	}
 
 	Log struct {
-		Prod   bool
-		Output string
+		Prod bool
 	}
 
 	Api struct {
