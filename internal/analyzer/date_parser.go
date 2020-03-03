@@ -18,7 +18,7 @@ func NewDateParser() *DateParser {
 
 func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
-		word      = words[0]
+		word      string
 		offset    = 1
 		exactly   = `утром`
 		exactTime time.Time
@@ -26,6 +26,11 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 		date      *calendar.Date
 	)
 
+	if len(words) == 0 {
+		return words, nil
+	}
+
+	word = words[0]
 	if len(words) > 1 {
 		exactly = words[1]
 		offset++
