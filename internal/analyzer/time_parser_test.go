@@ -48,6 +48,11 @@ func TestOverTimeParser(t *testing.T) {
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, 2*time.Second),
 		},
+		`через 5 сек`: {
+			words:    []string{`через`, `5`, `сек`},
+			rest:     []string{},
+			reminder: domain.NewReminder(0, ``, 5*time.Second),
+		},
 		`через минуту`: {
 			words:    []string{`через`, `минуту`, `действие`},
 			rest:     []string{`действие`},

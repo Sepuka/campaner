@@ -22,7 +22,7 @@ func (tf *TimeFrame) GetDuration() (time.Duration, error) {
 	var value, dimension = tf.normalize()
 
 	switch {
-	case strings.HasPrefix(dimension, `секунд`):
+	case strings.HasPrefix(dimension, `сек`):
 		return time.Duration(value) * time.Second, nil
 	case strings.HasPrefix(dimension, `минут`):
 		return time.Duration(value) * time.Minute, nil
