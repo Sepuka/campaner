@@ -41,7 +41,11 @@ func TestNewAnalyzer(t *testing.T) {
 	if now.Hour() > 22 && now.Minute() > 15 {
 		day++
 	}
-	nextDateTime := time.Date(now.Year(), now.Month(), day, 22, 15, 0, 0, time.Local)
+	nextDateTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 15, 0, 0, time.Local)
+	if now.After(nextDateTime) {
+		nextDateTime = nextDateTime.Add(24 * time.Hour)
+	}
+	tomorrowMorning := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.Local).Add(24 * time.Hour)
 
 	var testCases = map[string]struct {
 		words    string
@@ -62,6 +66,10 @@ func TestNewAnalyzer(t *testing.T) {
 		`напомни в 22:15 что-то сделать`: {
 			words:    `напомни в 22:15 что-то сделать`,
 			reminder: domain.NewReminder(0, `напомни в 22:15 что-то сделать`, time.Until(nextDateTime)),
+		},
+		`завтра в 09:23 отвести детей в школу`: {
+			words:    `завтра в 09:23 отвести детей в школу`,
+			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(tomorrowMorning.Add(23*time.Minute))),
 		},
 	}
 

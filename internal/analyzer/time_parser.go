@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"github.com/sepuka/campaner/internal/calendar"
+	"github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/domain"
 )
@@ -21,6 +22,9 @@ func (obj *TimeParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	)
 
 	if when, rest, err = when.ApplyTime(words); err != nil {
+		if errors.GetType(err) == errors.NotATimeError {
+			return words[1:], nil
+		}
 		return words, err
 	}
 

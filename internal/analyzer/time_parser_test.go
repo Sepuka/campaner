@@ -5,48 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sepuka/campaner/internal/errors"
-
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestTimeParser_WithIncorrectData(t *testing.T) {
-	parser := NewTimeParser()
-	reminder := &domain.Reminder{}
-	var testCases = map[string]struct {
-		words []string
-		rest  []string
-		err   error
-	}{
-		`empty rest when empty words`: {
-			words: []string{},
-			rest:  []string{},
-			err:   errors.NewNotATimeError(),
-		},
-		`stop analyze when occurred unknown word`: {
-			words: []string{
-				`first_unknown_word`,
-				`second_unknown_word`,
-			},
-			rest: []string{
-				`first_unknown_word`,
-				`second_unknown_word`,
-			},
-			err: errors.NewNotATimeError(),
-		},
-	}
-
-	for testName, testCase := range testCases {
-		testError := fmt.Sprintf(`test "%s" error`, testName)
-		actualReminder := &domain.Reminder{}
-		rest, err := parser.Parse(testCase.words, actualReminder)
-		assert.Equal(t, testCase.rest, rest, testError)
-		assert.Equal(t, reminder, actualReminder)
-		assert.EqualError(t, err, testCase.err.Error())
-	}
-}
 
 func TestOverTimeParser(t *testing.T) {
 	parser := NewTimeParser()
