@@ -1,9 +1,15 @@
 package domain
 
 import (
-	"errors"
 	"strings"
 	"time"
+
+	"github.com/sepuka/campaner/internal/errors"
+)
+
+const (
+	maxMinuteValue = 59
+	maxHourValue   = 23
 )
 
 type TimeFrame struct {
@@ -19,7 +25,7 @@ func NewTimeFrame(value float64, dimension string) *TimeFrame {
 }
 
 func (tf *TimeFrame) GetDuration() (time.Duration, error) {
-	var value, dimension = tf.normalize()
+	var value, dimension = tf.castToWhole()
 
 	switch {
 	case strings.HasPrefix(dimension, `сек`):
@@ -29,11 +35,42 @@ func (tf *TimeFrame) GetDuration() (time.Duration, error) {
 	case strings.HasPrefix(dimension, `час`):
 		return time.Duration(value) * time.Hour, nil
 	default:
-		return 0, errors.New(`unknown dimension`)
+		return 0, errors.NewUnknownDimensionError(tf.value, tf.dimension)
 	}
 }
 
-func (tf *TimeFrame) normalize() (int, string) {
+func (tf *TimeFrame) GetTime() (time.Time, error) {
+	var (
+		now    = time.Now()
+		value  = int(tf.value)
+		atTime time.Time
+	)
+
+	switch {
+	case strings.HasPrefix(tf.dimension, `минут`):
+		if value > maxMinuteValue {
+			return time.Time{}, errors.NewInvalidTimeValueError(value)
+		}
+		atTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), value, 0, 0, time.Local)
+		if atTime.Before(time.Now()) {
+			atTime = atTime.Add(time.Hour)
+		}
+		return atTime, nil
+	case strings.HasPrefix(tf.dimension, `час`):
+		if value > maxHourValue {
+			return time.Time{}, errors.NewInvalidTimeValueError(value)
+		}
+		atTime = time.Date(now.Year(), now.Month(), now.Day(), value, 0, 0, 0, time.Local)
+		if atTime.Before(time.Now()) {
+			atTime = atTime.Add(24 * time.Hour)
+		}
+		return atTime, nil
+	default:
+		return time.Time{}, errors.NewUnknownDimensionError(tf.value, tf.dimension)
+	}
+}
+
+func (tf *TimeFrame) castToWhole() (int, string) {
 	var (
 		value     int
 		dimension = tf.dimension

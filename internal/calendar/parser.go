@@ -46,6 +46,10 @@ func (d *Date) ApplyTime(words []string) (*Date, []string, error) {
 		return dateTime, rest, nil
 	}
 
+	if dateTime, rest, err = d.onNextTimePeriod(words); err == nil {
+		return dateTime, rest, nil
+	}
+
 	return nil, words, errors.NewNotATimeError()
 }
 
@@ -68,9 +72,9 @@ func (d *Date) findTimeOfDay(words []string) (*Date, []string, error) {
 
 func (d *Date) onTimeParser(words []string) (*Date, []string, error) {
 	var (
-		exactTime time.Time
-		err       error
-		moment    string
+		atTime time.Time
+		err    error
+		moment string
 	)
 
 	if len(words) < 2 {
@@ -82,30 +86,60 @@ func (d *Date) onTimeParser(words []string) (*Date, []string, error) {
 	}
 
 	moment = words[1]
-	if exactTime, err = time.Parse(`15:04:05`, moment); err != nil {
-		if exactTime, err = time.Parse(`15:04`, moment); err != nil {
+	if atTime, err = time.Parse(`15:04:05`, moment); err != nil {
+		if atTime, err = time.Parse(`15:04`, moment); err != nil {
 			return nil, words, errors.NewNotATimeError()
 		}
 	}
 
-	exactTime = time.Date(d.date.Year(), d.date.Month(), d.date.Day(), exactTime.Hour(), exactTime.Minute(), 0, 0, time.Local)
+	atTime = time.Date(d.date.Year(), d.date.Month(), d.date.Day(), atTime.Hour(), atTime.Minute(), 0, 0, time.Local)
 
-	if exactTime.Before(time.Now()) {
-		exactTime = exactTime.Add(24 * time.Hour)
+	if atTime.Before(time.Now()) {
+		atTime = atTime.Add(24 * time.Hour)
 	}
 
-	return NewDate(exactTime), words[2:], nil
+	return NewDate(atTime), words[2:], nil
+}
+
+func (d *Date) onNextTimePeriod(words []string) (*Date, []string, error) {
+	var (
+		atTime            time.Time
+		err               error
+		moment, dimension string
+		value             float64
+		timeFrame         *domain.TimeFrame
+	)
+
+	if len(words) < 3 {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	if words[0] != `в` {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	moment = words[1]
+	dimension = words[2]
+	if value, err = strconv.ParseFloat(moment, 9); err != nil {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	timeFrame = domain.NewTimeFrame(value, dimension)
+	if atTime, err = timeFrame.GetTime(); err != nil {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	return NewDate(atTime), words[3:], nil
 }
 
 func (d *Date) overTimeParser(words []string) (*Date, []string, error) {
 	var (
-		value      float64
-		dimension  string
-		restOffset int
-		err        error
-		timeFrame  *domain.TimeFrame
-		duration   time.Duration
-		moment     string
+		value             float64
+		dimension, moment string
+		restOffset        int
+		err               error
+		timeFrame         *domain.TimeFrame
+		duration          time.Duration
 	)
 
 	if len(words) < 2 {

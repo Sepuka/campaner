@@ -125,19 +125,23 @@ func TestOverTimeParser(t *testing.T) {
 func TestOnTimeParser(t *testing.T) {
 	parser := NewTimeParser()
 	now := time.Now()
-	day := now.Day()
+	nextDateTime := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, time.Local)
 	if now.Hour() > 15 {
-		day++
+		nextDateTime = nextDateTime.Add(24 * time.Hour)
 	}
-	nextDateTime := time.Date(now.Year(), now.Month(), day, 15, 0, 0, 0, time.Local)
 
 	var testCases = map[string]struct {
 		words    []string
 		rest     []string
 		reminder *domain.Reminder
 	}{
-		`в 5 минут совершить действие`: {
+		`в 15:00 совершить действие`: {
 			words:    []string{`в`, `15:00`, `совершить`, `действие`},
+			rest:     []string{`совершить`, `действие`},
+			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
+		},
+		`в 15 часов совершить действие`: {
+			words:    []string{`в`, `15`, `часов`, `совершить`, `действие`},
 			rest:     []string{`совершить`, `действие`},
 			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
 		},

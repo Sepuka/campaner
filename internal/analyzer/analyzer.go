@@ -50,7 +50,7 @@ func (obj *Analyzer) buildReminder(words []string, reminder *domain.Reminder) {
 			)
 
 			switch errors.GetType(err) {
-			case errors.TimeIsOverError:
+			case errors.ItIsPastTimeError:
 				what = `it is past time!`
 			default:
 				patterns = strings.Join(parser.PatternList(), "\n")

@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -58,6 +59,27 @@ func NewUnConsistentGlossaryError(word string, glossary []string) error {
 		context: map[string]string{
 			`got`: word,
 			`can`: strings.Join(glossary, `,`),
+		},
+	}
+}
+
+func NewUnknownDimensionError(value float64, dimension string) error {
+	return calendarError{
+		errorType:     UnknownDimensionError,
+		originalError: errors.New(`got unknown time dimension`),
+		context: map[string]string{
+			`value`:     fmt.Sprint(value),
+			`dimension`: dimension,
+		},
+	}
+}
+
+func NewInvalidTimeValueError(value int) error {
+	return calendarError{
+		errorType:     InvalidTimeError,
+		originalError: errors.New(`got invalid time`),
+		context: map[string]string{
+			`value`: fmt.Sprint(value),
 		},
 	}
 }

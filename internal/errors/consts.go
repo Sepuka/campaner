@@ -3,9 +3,10 @@ package errors
 const (
 	NoType = ErrorType(iota)
 	UnConsistentGlossaryError
-	TimeIsOverError
-	TimeParseError
+	ItIsPastTimeError
+	UnknownDimensionError
 	NotATimeError
+	InvalidTimeError
 )
 
 type ErrorType uint
