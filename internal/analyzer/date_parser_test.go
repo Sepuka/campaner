@@ -12,14 +12,10 @@ import (
 
 func TestDateParser_Parse(t *testing.T) {
 	now := time.Now()
-	day := now.Day()
-	if now.Hour() > 15 {
-		day++
-	}
-	tomorrowMorningTime := time.Date(now.Year(), now.Month(), day, 9, 0, 0, 0, time.Now().Location())
-	tomorrowAfternoonTime := time.Date(now.Year(), now.Month(), day, 12, 0, 0, 0, time.Now().Location())
-	tomorrowEveningTime := time.Date(now.Year(), now.Month(), day, 18, 0, 0, 0, time.Now().Location())
-	tomorrowNightTime := time.Date(now.Year(), now.Month(), day, 23, 0, 0, 0, time.Now().Location())
+	tomorrowMorningTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
+	tomorrowAfternoonTime := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
+	tomorrowEveningTime := time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
+	tomorrowNightTime := time.Date(now.Year(), now.Month(), now.Day(), 23, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
 
 	type args struct {
 		words    []string
@@ -54,6 +50,15 @@ func TestDateParser_Parse(t *testing.T) {
 			args: args{
 				words:    []string{`завтра`, `утром`},
 				reminder: domain.NewReminder(0, ``, time.Until(tomorrowMorningTime)),
+			},
+			want:    []string{},
+			wantErr: false,
+		},
+		{
+			name: `tomorrow at 11:23 a.m.`,
+			args: args{
+				words:    []string{`завтра`, `в`, `11:23`},
+				reminder: domain.NewReminder(0, ``, time.Until(tomorrowMorningTime.Add(143*time.Minute))),
 			},
 			want:    []string{},
 			wantErr: false,

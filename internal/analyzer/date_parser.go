@@ -1,12 +1,16 @@
 package analyzer
 
 import (
-	"errors"
-	"time"
+	"github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/sepuka/campaner/internal/calendar"
+)
+
+const (
+	today    = `сегодня`
+	tomorrow = `завтра`
 )
 
 type DateParser struct {
@@ -18,47 +22,47 @@ func NewDateParser() *DateParser {
 
 func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
-		word      string
-		offset    = 1
-		exactly   = `утром`
-		exactTime time.Time
-		err       error
-		date      *calendar.Date
+		offset = 1
+		rest   []string
+		word   string
+		err    error
+		when   *calendar.Date
 	)
 
 	if len(words) == 0 {
 		return words, nil
 	}
-
 	word = words[0]
-	if len(words) > 1 {
-		exactly = words[1]
-		offset++
-	}
 
 	switch word {
-	case `завтра`:
-		date = calendar.NewDate(calendar.NextMidnight())
+	case tomorrow:
+		when = calendar.NewDate(calendar.NextMidnight())
+	case today:
+		when = calendar.NewDate(calendar.LastMidnight())
 	default:
-		date = calendar.NewDate(calendar.LastMidnight())
+		return words, errors.NewUnConsistentGlossaryError(word, obj.Glossary())
 	}
 
-	if exactTime, err = date.GetTime(exactly); err != nil {
-		exactTime = date.GetMorning()
-	}
-	reminder.When = time.Until(exactTime)
+	if when, rest, err = when.ApplyTime(words[offset:]); err != nil {
+		if errors.GetType(err) == errors.NotATimeError {
+			switch word {
+			case today:
+				when = calendar.GetNextPeriod(when)
+			case tomorrow:
+				when = calendar.NewDate(calendar.NextMorning())
+			}
 
-	if !reminder.IsValid() {
-		return words, errors.New(`date is not valid`)
+		}
 	}
+	reminder.When = when.Until()
 
-	return words[offset:], nil
+	return rest, nil
 }
 
 func (obj *DateParser) Glossary() []string {
 	return []string{
-		`сегодня`,
-		`завтра`,
+		today,
+		tomorrow,
 	}
 }
 
@@ -67,5 +71,6 @@ func (obj *DateParser) PatternList() []string {
 		`утром позавтракать`,
 		`завтра позвонить маме`,
 		`завтра вечером вынести мусор`,
+		`завтра в 15:35 назначить встречу`,
 	}
 }

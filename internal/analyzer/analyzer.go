@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sepuka/campaner/internal/errors"
+
 	"github.com/sepuka/campaner/internal/domain"
 )
 
@@ -44,9 +46,17 @@ func (obj *Analyzer) buildReminder(words []string, reminder *domain.Reminder) {
 	if parser, ok := obj.glossary[words[0]]; ok {
 		if rest, err = parser.Parse(words, reminder); err != nil {
 			var (
-				patterns = strings.Join(parser.PatternList(), "\n")
-				what     = fmt.Sprintf("use known format, for instance:\n%s\n", patterns)
+				patterns, what string
 			)
+
+			switch errors.GetType(err) {
+			case errors.TimeIsOverError:
+				what = `it is past time!`
+			default:
+				patterns = strings.Join(parser.PatternList(), "\n")
+				what = fmt.Sprintf("use known format, for instance:\n%s\n", patterns)
+			}
+
 			*reminder = *domain.NewImmediateReminder(reminder.Whom, what)
 			return
 		}

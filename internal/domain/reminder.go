@@ -63,3 +63,7 @@ func (r *Reminder) IsImmediate() bool {
 func (r *Reminder) IsValid() bool {
 	return r.When > 0
 }
+
+func (r *Reminder) IsItToday() bool {
+	return time.Now().Add(r.When).Day() == time.Now().Day()
+}

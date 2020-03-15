@@ -11,3 +11,7 @@ func LastMidnight() time.Time {
 func NextMidnight() time.Time {
 	return LastMidnight().Add(time.Hour * 24)
 }
+
+func NextMorning() time.Time {
+	return NextMidnight().Add(time.Hour * 9)
+}

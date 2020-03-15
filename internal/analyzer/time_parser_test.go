@@ -5,22 +5,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/errors"
+
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOverTimeParser(t *testing.T) {
+func TestTimeParser_WithIncorrectData(t *testing.T) {
 	parser := NewTimeParser()
+	reminder := &domain.Reminder{}
 	var testCases = map[string]struct {
-		words    []string
-		rest     []string
-		reminder *domain.Reminder
+		words []string
+		rest  []string
+		err   error
 	}{
 		`empty rest when empty words`: {
-			words:    []string{},
-			rest:     []string{},
-			reminder: &domain.Reminder{},
+			words: []string{},
+			rest:  []string{},
+			err:   errors.NewNotATimeError(),
 		},
 		`stop analyze when occurred unknown word`: {
 			words: []string{
@@ -31,8 +34,27 @@ func TestOverTimeParser(t *testing.T) {
 				`first_unknown_word`,
 				`second_unknown_word`,
 			},
-			reminder: &domain.Reminder{},
+			err: errors.NewNotATimeError(),
 		},
+	}
+
+	for testName, testCase := range testCases {
+		testError := fmt.Sprintf(`test "%s" error`, testName)
+		actualReminder := &domain.Reminder{}
+		rest, err := parser.Parse(testCase.words, actualReminder)
+		assert.Equal(t, testCase.rest, rest, testError)
+		assert.Equal(t, reminder, actualReminder)
+		assert.EqualError(t, err, testCase.err.Error())
+	}
+}
+
+func TestOverTimeParser(t *testing.T) {
+	parser := NewTimeParser()
+	var testCases = map[string]struct {
+		words    []string
+		rest     []string
+		reminder *domain.Reminder
+	}{
 		`через секунду`: {
 			words:    []string{`через`, `секунду`, `действие`},
 			rest:     []string{`действие`},
@@ -95,7 +117,7 @@ func TestOverTimeParser(t *testing.T) {
 		actualReminder := &domain.Reminder{}
 		rest, err := parser.Parse(testCase.words, actualReminder)
 		assert.Equal(t, testCase.rest, rest, testError)
-		assert.Equal(t, testCase.reminder, actualReminder)
+		assert.InDelta(t, testCase.reminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.NoError(t, err, testError)
 	}
 }
