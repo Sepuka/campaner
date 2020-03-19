@@ -64,8 +64,8 @@ func TestNewAnalyzer(t *testing.T) {
 			reminder: domain.NewReminder(0, `напомни мне через 25 секунд что-то сделать`, time.Duration(25)*time.Second),
 		},
 		`напомни в 22:15 что-то сделать`: {
-			words:    `напомни в 22:15 что-то сделать`,
-			reminder: domain.NewReminder(0, `напомни в 22:15 что-то сделать`, time.Until(nextDateTime)),
+			words:    `напомни В 22:15 что-то сделать`,
+			reminder: domain.NewReminder(0, `напомни В 22:15 что-то сделать`, time.Until(nextDateTime)),
 		},
 		`завтра в 09:23 отвести детей в школу`: {
 			words:    `завтра в 09:23 отвести детей в школу`,

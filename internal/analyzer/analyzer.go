@@ -30,7 +30,7 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 }
 
 func (obj *Analyzer) Analyze(text string, reminder *domain.Reminder) {
-	words := strings.SplitN(text, ` `, MaxWordsLength)
+	words := strings.SplitN(strings.ToLower(text), ` `, MaxWordsLength)
 	obj.buildReminder(words, reminder)
 }
 
