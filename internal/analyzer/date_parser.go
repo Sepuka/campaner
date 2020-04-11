@@ -9,11 +9,25 @@ import (
 )
 
 const (
-	today    = `сегодня`
-	tomorrow = `завтра`
+	today     dayName = `сегодня`
+	tomorrow  dayName = `завтра`
+	monday    dayName = `понедельник`
+	tuesday   dayName = `вторник`
+	wednesday dayName = `среду`
+	thursday  dayName = `четверг`
+	friday    dayName = `пятницу`
+	saturday  dayName = `субботу`
+	sunday    dayName = `воскресенье`
 )
 
-type DateParser struct {
+type (
+	dayName    string
+	DateParser struct {
+	}
+)
+
+func (dn dayName) String() string {
+	return string(dn)
 }
 
 func NewDateParser() *DateParser {
@@ -22,11 +36,22 @@ func NewDateParser() *DateParser {
 
 func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
-		offset = 1
-		rest   []string
-		word   string
-		err    error
-		when   *calendar.Date
+		offset       = 1
+		rest         []string
+		word         string
+		err          error
+		when         *calendar.Date
+		wordsDateMap = map[dayName]*calendar.Date{
+			today:     calendar.NewDate(calendar.LastMidnight()),
+			tomorrow:  calendar.NewDate(calendar.NextMidnight()),
+			monday:    calendar.NextMonday(),
+			tuesday:   calendar.NextTuesday(),
+			wednesday: calendar.NextWednesday(),
+			thursday:  calendar.NextThursday(),
+			friday:    calendar.NextFriday(),
+			saturday:  calendar.NextSaturday(),
+			sunday:    calendar.NextSunday(),
+		}
 	)
 
 	if len(words) == 0 {
@@ -34,24 +59,19 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	}
 	word = words[0]
 
-	switch word {
-	case tomorrow:
-		when = calendar.NewDate(calendar.NextMidnight())
-	case today:
-		when = calendar.NewDate(calendar.LastMidnight())
-	default:
+	when, ok := wordsDateMap[dayName(word)]
+	if ok == false {
 		return words, errors.NewUnConsistentGlossaryError(word, obj.Glossary())
 	}
 
 	if when, rest, err = when.ApplyTime(words[offset:]); err != nil {
 		if errors.GetType(err) == errors.NotATimeError {
-			switch word {
+			switch dayName(word) {
 			case today:
 				when = calendar.GetNextPeriod(when)
 			case tomorrow:
 				when = calendar.NewDate(calendar.NextMorning())
 			}
-
 		}
 	}
 	reminder.When = when.Until()
@@ -61,8 +81,15 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 
 func (obj *DateParser) Glossary() []string {
 	return []string{
-		today,
-		tomorrow,
+		today.String(),
+		tomorrow.String(),
+		monday.String(),
+		tuesday.String(),
+		wednesday.String(),
+		thursday.String(),
+		friday.String(),
+		saturday.String(),
+		sunday.String(),
 	}
 }
 
@@ -72,5 +99,6 @@ func (obj *DateParser) PatternList() []string {
 		`завтра позвонить маме`,
 		`завтра вечером вынести мусор`,
 		`завтра в 15:35 назначить встречу`,
+		`в четверг в 16:00 совещание`,
 	}
 }

@@ -19,6 +19,10 @@ func NewDate(date time.Time) *Date {
 	}
 }
 
+func (d *Date) Add(t time.Duration) *Date {
+	return NewDate(d.date.Add(t))
+}
+
 func (d *Date) Until() time.Duration {
 	return time.Until(d.date)
 }

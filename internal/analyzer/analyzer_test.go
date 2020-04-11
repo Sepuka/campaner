@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/calendar"
+
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/stretchr/testify/assert"
@@ -14,6 +16,7 @@ import (
 var (
 	parsers = []Parser{
 		NewTimeParser(),
+		NewDateParser(),
 	}
 	glossary = make(map[string]Parser)
 )
@@ -70,6 +73,54 @@ func TestNewAnalyzer(t *testing.T) {
 		`завтра в 09:23 отвести детей в школу`: {
 			words:    `завтра в 09:23 отвести детей в школу`,
 			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(tomorrowMorning.Add(23*time.Minute))),
+		},
+	}
+
+	for testName, testCase := range testCases {
+		var (
+			testError        = fmt.Sprintf(`test "%s" error`, testName)
+			expectedReminder = testCase.reminder
+			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
+		)
+		analyzer.Analyze(testCase.words, actualReminder)
+		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
+	}
+}
+
+func TestDayOfWeekAnalyzer(t *testing.T) {
+	analyzer := NewAnalyzer(glossary)
+	var testCases = map[string]struct {
+		words    string
+		reminder *domain.Reminder
+	}{
+		`в понедельник и время с минутами`: {
+			words:    `в понедельник в 16:00 часов встреча`,
+			reminder: domain.NewReminder(0, `в понедельник в 16:00 часов встреча`, calendar.NextMonday().Add(time.Hour*16).Until()),
+		},
+		`во вторник и время с минутами`: {
+			words:    `во вторник в 17:00 часов встреча`,
+			reminder: domain.NewReminder(0, `во вторник в 17:00 часов встреча`, calendar.NextTuesday().Add(time.Hour*17).Until()),
+		},
+		`в среду и время с минутами`: {
+			words:    `в среду в 18:00 часов встреча`,
+			reminder: domain.NewReminder(0, `в среду в 18:00 часов встреча`, calendar.NextWednesday().Add(time.Hour*18).Until()),
+		},
+		`в четверг и время с минутами`: {
+			words:    `в четверг в 19:00 часов встреча`,
+			reminder: domain.NewReminder(0, `в четверг в 19:00 часов встреча`, calendar.NextThursday().Add(time.Hour*19).Until()),
+		},
+		`в пятницу и время с минутами`: {
+			words:    `в пятницу в 20:00 часов встреча`,
+			reminder: domain.NewReminder(0, `в пятницу в 20:00 часов встреча`, calendar.NextFriday().Add(time.Hour*20).Until()),
+		},
+		`в субботу и время с минутами`: {
+			words:    `в субботу в 21:00 час встреча`,
+			reminder: domain.NewReminder(0, `в субботу в 21:00 час встреча`, calendar.NextSaturday().Add(time.Hour*21).Until()),
+		},
+		`в воскресенье и время с минутами`: {
+			words:    `в воскресенье в 22:00 часа встреча`,
+			reminder: domain.NewReminder(0, `в воскресенье в 22:00 часа встреча`, calendar.NextSunday().Add(time.Hour*22).Until()),
 		},
 	}
 
