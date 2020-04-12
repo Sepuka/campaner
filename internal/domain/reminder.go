@@ -5,15 +5,25 @@ import (
 	"errors"
 	"time"
 
+	"github.com/go-pg/pg"
+
 	"github.com/go-pg/pg/orm"
 )
 
-const toShortTime = 5 * time.Second
+const (
+	toShortTime = 5 * time.Second
+
+	StatusNew = iota
+	StatusSuccess
+	StatusFailed
+)
 
 type (
 	ReminderRepository interface {
-		Persist(reminder *Reminder) error
-		FindActual(timestamp time.Time) ([]Reminder, error)
+		Add(reminder *Reminder) error
+		FindActual(timestamp time.Time) ([]Reminder, *pg.Tx, error)
+		SetStatus(*Reminder, *pg.Tx) (pg.Result, error)
+		Commit(*pg.Tx) error
 	}
 
 	Reminder struct {
@@ -23,6 +33,7 @@ type (
 		What       string    `sql:"content",pg:"notnull"`
 		NotifyAt   time.Time
 		When       time.Duration `sql:"-"`
+		Status     int
 	}
 )
 

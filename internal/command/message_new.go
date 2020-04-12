@@ -52,7 +52,7 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	)
 
 	obj.analyzer.Analyze(text, reminder)
-	if err = obj.reminderRepo.Persist(reminder); err != nil {
+	if err = obj.reminderRepo.Add(reminder); err != nil {
 		obj.
 			logger.
 			With(

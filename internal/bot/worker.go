@@ -6,6 +6,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-pg/pg"
+
 	"github.com/sepuka/campaner/internal/api"
 	"go.uber.org/zap"
 
@@ -58,9 +60,10 @@ func (w *Worker) notify(moment time.Time) {
 		rows []domain.Reminder
 		row  domain.Reminder
 		err  error
+		tx   *pg.Tx
 	)
 
-	if rows, err = w.repo.FindActual(moment); err != nil {
+	if rows, tx, err = w.repo.FindActual(moment); err != nil {
 		w.
 			logger.
 			With(
@@ -70,17 +73,32 @@ func (w *Worker) notify(moment time.Time) {
 		return
 	}
 
+	if rows == nil {
+		return
+	}
+
 	for _, row = range rows {
-		go w.remind(row)
+		w.remind(&row, tx)
+	}
+
+	if err = w.repo.Commit(tx); err != nil {
+		w.
+			logger.
+			With(
+				zap.Error(err),
+			).
+			Errorf(`error while commit reminder statuses`)
 	}
 }
 
-func (w *Worker) remind(reminder domain.Reminder) {
+func (w *Worker) remind(reminder *domain.Reminder, tx *pg.Tx) {
 	var (
-		err error
+		err    error
+		status = domain.StatusSuccess
 	)
 
 	if err = w.api.Send(reminder.Whom, reminder.What); err != nil {
+		status = domain.StatusFailed
 		w.
 			logger.
 			With(
@@ -88,5 +106,16 @@ func (w *Worker) remind(reminder domain.Reminder) {
 				zap.Error(err),
 			).
 			Error(`send api message error`)
+	}
+
+	reminder.Status = status
+	if _, err = w.repo.SetStatus(reminder, tx); err != nil {
+		w.
+			logger.
+			With(
+				zap.Any(`reminder`, reminder),
+				zap.Error(err),
+			).
+			Error(`error updating reminder status`)
 	}
 }
