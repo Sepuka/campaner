@@ -36,10 +36,14 @@ func (r *ReminderRepository) FindActual(timestamp time.Time) ([]domain.Reminder,
 
 	err = tx.
 		Model(&models).
-		Where(`notify_at = ?`, timestamp).
+		Where(`notify_at = ? AND status = ?`, timestamp, domain.StatusNew).
 		Limit(actualBatchLimit).
 		For(`UPDATE SKIP LOCKED`).
 		Select()
+
+	if models == nil {
+		return models, nil, tx.Rollback()
+	}
 
 	return models, tx, err
 }

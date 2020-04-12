@@ -10,9 +10,9 @@ import (
 	"github.com/go-pg/pg/orm"
 )
 
-const (
-	toShortTime = 5 * time.Second
+const toShortTime = 5 * time.Second
 
+const (
 	StatusNew = iota
 	StatusSuccess
 	StatusFailed
