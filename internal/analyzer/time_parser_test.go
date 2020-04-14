@@ -107,6 +107,11 @@ func TestOnTimeParser(t *testing.T) {
 			rest:     []string{`совершить`, `действие`},
 			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
 		},
+		`в 15 совещание`: {
+			words:    []string{`в`, `15`, `совещание`},
+			rest:     []string{`совещание`},
+			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
+		},
 	}
 
 	for testName, testCase := range testCases {

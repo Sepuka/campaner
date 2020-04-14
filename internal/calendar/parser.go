@@ -19,6 +19,10 @@ func NewDate(date time.Time) *Date {
 	}
 }
 
+func (d *Date) IsPast() bool {
+	return d.date.Before(time.Now())
+}
+
 func (d *Date) Add(t time.Duration) *Date {
 	return NewDate(d.date.Add(t))
 }
@@ -54,7 +58,11 @@ func (d *Date) ApplyTime(words []string) (*Date, []string, error) {
 		return dateTime, rest, nil
 	}
 
-	return nil, words, errors.NewNotATimeError()
+	if dateTime, rest, err = d.onNextTimeHourPeriod(words); err == nil {
+		return dateTime, rest, nil
+	}
+
+	return d, words, errors.NewNotATimeError()
 }
 
 func (d *Date) findTimeOfDay(words []string) (*Date, []string, error) {
@@ -70,7 +78,7 @@ func (d *Date) findTimeOfDay(words []string) (*Date, []string, error) {
 	case `ночью`:
 		return NewDate(d.setTime(23)), words[1:], nil
 	default:
-		return nil, words, errors.NewNotATimeError()
+		return d, words, errors.NewNotATimeError()
 	}
 }
 
@@ -134,6 +142,39 @@ func (d *Date) onNextTimePeriod(words []string) (*Date, []string, error) {
 	}
 
 	return NewDate(atTime), words[3:], nil
+}
+
+func (d *Date) onNextTimeHourPeriod(words []string) (*Date, []string, error) {
+	var (
+		atTime *Date
+		err    error
+		moment string
+		value  int64
+	)
+
+	if len(words) < 2 {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	if words[0] != `в` {
+		return nil, words, errors.NewNotATimeError()
+	}
+
+	moment = words[1]
+	if value, err = strconv.ParseInt(moment, 0, 8); err != nil {
+		return d, words, errors.NewNotATimeError()
+	}
+
+	if value < 0 || value > 23 {
+		return d, words, errors.NewNotATimeError()
+	}
+
+	atTime = NewDate(LastMidnight()).Add(time.Hour * time.Duration(value))
+	if atTime.IsPast() {
+		atTime = atTime.Add(day)
+	}
+
+	return atTime, words[2:], nil
 }
 
 func (d *Date) overTimeParser(words []string) (*Date, []string, error) {

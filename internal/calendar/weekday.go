@@ -23,6 +23,11 @@ func NextTuesday() *Date {
 }
 
 func NextWednesday() *Date {
+	var today = time.Now().Weekday()
+	if today < time.Wednesday {
+		return NewDate(LastMidnight()).Add(day * time.Duration(time.Wednesday-today))
+	}
+
 	return NextSunday().Add(day * time.Duration(time.Wednesday))
 }
 

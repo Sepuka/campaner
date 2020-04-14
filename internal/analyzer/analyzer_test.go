@@ -122,6 +122,10 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 			words:    `в воскресенье в 22:00 часа встреча`,
 			reminder: domain.NewReminder(0, `в воскресенье в 22:00 часа встреча`, calendar.NextSunday().Add(time.Hour*22).Until()),
 		},
+		`день недели и время без минут`: {
+			words:    `В среду в 16 пройдет маленькая пятничная встреча.`,
+			reminder: domain.NewReminder(0, `В среду в 16 пройдет маленькая пятничная встреча.`, calendar.NextWednesday().Add(time.Hour*16).Until()),
+		},
 	}
 
 	for testName, testCase := range testCases {
