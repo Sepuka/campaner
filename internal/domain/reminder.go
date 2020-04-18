@@ -27,7 +27,7 @@ type (
 	}
 
 	Reminder struct {
-		ReminderId int       `pg:",pk"`
+		ReminderId int       `sql:",pk"`
 		CreatedAt  time.Time `pg:"default:now()"`
 		Whom       int       `sql:"user_id"`
 		What       string    `sql:"content",pg:"notnull"`

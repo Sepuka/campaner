@@ -7,7 +7,10 @@ import (
 	"github.com/sepuka/campaner/internal/domain"
 )
 
-const actualBatchLimit = 100
+const (
+	actualBatchLimit = 100
+	batchPeriodSec   = 60
+)
 
 type ReminderRepository struct {
 	db *pg.DB
@@ -25,9 +28,11 @@ func (r *ReminderRepository) Add(reminder *domain.Reminder) error {
 
 func (r *ReminderRepository) FindActual(timestamp time.Time) ([]domain.Reminder, *pg.Tx, error) {
 	var (
-		models []domain.Reminder
-		err    error
-		tx     *pg.Tx
+		models      []domain.Reminder
+		err         error
+		tx          *pg.Tx
+		startPeriod = timestamp.Add(-batchPeriodSec * time.Second)
+		endPeriod   = timestamp
 	)
 
 	if tx, err = r.db.Begin(); err != nil {
@@ -36,7 +41,7 @@ func (r *ReminderRepository) FindActual(timestamp time.Time) ([]domain.Reminder,
 
 	err = tx.
 		Model(&models).
-		Where(`notify_at = ? AND status = ?`, timestamp, domain.StatusNew).
+		Where(`(notify_at BETWEEN ? AND ?) AND status = ?`, startPeriod, endPeriod, domain.StatusNew).
 		Limit(actualBatchLimit).
 		For(`UPDATE SKIP LOCKED`).
 		Select()
@@ -51,8 +56,8 @@ func (r *ReminderRepository) FindActual(timestamp time.Time) ([]domain.Reminder,
 func (r *ReminderRepository) SetStatus(reminder *domain.Reminder, tx *pg.Tx) (pg.Result, error) {
 	return tx.
 		Model(reminder).
-		Set(`status = ?status`).
-		Where(`reminder_id = ?reminder_id`).
+		Column(`status`).
+		WherePK().
 		Update()
 }
 
