@@ -169,7 +169,7 @@ func (d *Date) onNextTimeHourPeriod(words []string) (*Date, []string, error) {
 		return d, words, errors.NewNotATimeError()
 	}
 
-	atTime = NewDate(LastMidnight()).Add(time.Hour * time.Duration(value))
+	atTime = d.Add(time.Hour * time.Duration(value))
 	if atTime.IsPast() {
 		atTime = atTime.Add(day)
 	}
