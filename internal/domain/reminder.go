@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-pg/pg"
@@ -24,6 +25,7 @@ type (
 		FindActual(timestamp time.Time) ([]Reminder, *pg.Tx, error)
 		SetStatus(*Reminder, *pg.Tx) (pg.Result, error)
 		Commit(*pg.Tx) error
+		Scheduled(userId int, limit uint32) ([]Reminder, error)
 	}
 
 	Reminder struct {
@@ -77,4 +79,8 @@ func (r *Reminder) IsValid() bool {
 
 func (r *Reminder) IsItToday() bool {
 	return time.Now().Add(r.When).Day() == time.Now().Day()
+}
+
+func (r *Reminder) String() string {
+	return fmt.Sprintf(`"%s" at %s`, r.What, r.NotifyAt.Format(`2006-01-02 15:04:05`))
 }

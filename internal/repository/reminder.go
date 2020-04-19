@@ -64,3 +64,19 @@ func (r *ReminderRepository) SetStatus(reminder *domain.Reminder, tx *pg.Tx) (pg
 func (r *ReminderRepository) Commit(tx *pg.Tx) error {
 	return tx.Commit()
 }
+
+func (r *ReminderRepository) Scheduled(userId int, limit uint32) ([]domain.Reminder, error) {
+	var (
+		models []domain.Reminder
+		err    error
+	)
+
+	err = r.
+		db.
+		Model(&models).
+		Where(`notify_at > ? AND user_id == ?`, time.Now(), userId).
+		Limit(int(limit)).
+		Select()
+
+	return models, err
+}
