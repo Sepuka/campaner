@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	limit         = 5
-	list  listCmd = `список`
+	limit                  = 5
+	list           listCmd = `список`
+	emptyTasksList         = `There aren't any tasks yet`
 )
 
 type (
@@ -39,12 +40,15 @@ func (obj *ListParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 		return words, err
 	}
 
-	var schedule = make([]string, 0, len(models))
-	for _, m := range models {
-		schedule = append(schedule, m.String())
+	if models == nil {
+		reminder.What = emptyTasksList
+	} else {
+		var schedule = make([]string, 0, len(models))
+		for _, m := range models {
+			schedule = append(schedule, m.String())
+		}
+		reminder.What = strings.Join(schedule, "\r\n")
 	}
-
-	reminder.What = strings.Join(schedule, "\r\n")
 
 	return words[1:], err
 }

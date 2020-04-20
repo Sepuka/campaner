@@ -35,3 +35,22 @@ func TestListNotificationsAnalyzer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, rest)
 }
+
+func TestListNotificationsAnalyzer_noTasks(t *testing.T) {
+	var (
+		repo           = mocks.ReminderRepository{}
+		reminders      []domain.Reminder
+		actualReminder = domain.NewImmediateReminder(0, ``)
+		expectedText   = `There aren't any tasks yet`
+		rest           []string
+		err            error
+	)
+
+	repo.On(`Scheduled`, mock.Anything, mock.Anything).Return(reminders, nil)
+
+	var parser = NewListParser(repo)
+	rest, err = parser.Parse([]string{`список`}, actualReminder)
+	assert.Equal(t, expectedText, actualReminder.What)
+	assert.NoError(t, err)
+	assert.Empty(t, rest)
+}
