@@ -88,7 +88,7 @@ func TestOnTimeParser(t *testing.T) {
 	parser := NewTimeParser()
 	now := time.Now()
 	nextDateTime := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, time.Local)
-	if now.Hour() > 15 {
+	if now.Hour() >= 15 {
 		nextDateTime = nextDateTime.Add(24 * time.Hour)
 	}
 
