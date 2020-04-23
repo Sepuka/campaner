@@ -22,7 +22,7 @@ func init() {
 				},
 			},
 			Build: func(ctx def.Context) (interface{}, error) {
-				return analyzer.NewDateParser(), nil
+				return analyzer.NewDayParser(), nil
 			},
 		})
 	})

@@ -16,7 +16,7 @@ import (
 var (
 	parsers = []Parser{
 		NewTimeParser(),
-		NewDateParser(),
+		NewDayParser(),
 	}
 	glossary = make(map[string]Parser)
 )

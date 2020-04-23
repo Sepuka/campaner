@@ -10,7 +10,7 @@ import (
 	"github.com/sepuka/campaner/internal/domain"
 )
 
-func TestDateParser_Parse(t *testing.T) {
+func TestDayParser_Parse(t *testing.T) {
 	now := time.Now()
 	tomorrowMorningTime := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
 	tomorrowAfternoonTime := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.Now().Location()).Add(24 * time.Hour)
@@ -93,7 +93,7 @@ func TestDateParser_Parse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			obj := &DateParser{}
+			obj := &DayParser{}
 			actualReminder := &domain.Reminder{}
 			got, err := obj.Parse(tt.args.words, actualReminder)
 			if (err != nil) != tt.wantErr {

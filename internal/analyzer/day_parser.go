@@ -21,8 +21,8 @@ const (
 )
 
 type (
-	dayName    string
-	DateParser struct {
+	dayName   string
+	DayParser struct {
 	}
 )
 
@@ -30,11 +30,11 @@ func (dn dayName) String() string {
 	return string(dn)
 }
 
-func NewDateParser() *DateParser {
-	return &DateParser{}
+func NewDayParser() *DayParser {
+	return &DayParser{}
 }
 
-func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
+func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
 		offset       = 1
 		rest         []string
@@ -79,7 +79,7 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	return rest, nil
 }
 
-func (obj *DateParser) Glossary() []string {
+func (obj *DayParser) Glossary() []string {
 	return []string{
 		today.String(),
 		tomorrow.String(),
@@ -93,7 +93,7 @@ func (obj *DateParser) Glossary() []string {
 	}
 }
 
-func (obj *DateParser) PatternList() []string {
+func (obj *DayParser) PatternList() []string {
 	return []string{
 		`утром позавтракать`,
 		`завтра позвонить маме`,
