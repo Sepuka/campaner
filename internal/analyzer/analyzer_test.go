@@ -17,6 +17,7 @@ var (
 	parsers = []Parser{
 		NewTimeParser(),
 		NewDayParser(),
+		NewDateParser(),
 	}
 	glossary = make(map[string]Parser)
 )
@@ -125,6 +126,33 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 		`день недели и время без минут`: {
 			words:    `В среду в 16 пройдет маленькая пятничная встреча.`,
 			reminder: domain.NewReminder(0, `В среду в 16 пройдет маленькая пятничная встреча.`, calendar.NextWednesday().Add(time.Hour*16).Until()),
+		},
+	}
+
+	for testName, testCase := range testCases {
+		var (
+			testError        = fmt.Sprintf(`test "%s" error`, testName)
+			expectedReminder = testCase.reminder
+			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
+		)
+		analyzer.Analyze(testCase.words, actualReminder)
+		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
+	}
+}
+
+func TestDateAnalyzer(t *testing.T) {
+	analyzer := NewAnalyzer(glossary)
+	now := time.Now()
+	future := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Add(calendar.Day * 3)
+
+	var testCases = map[string]struct {
+		words    string
+		reminder *domain.Reminder
+	}{
+		`указано время и дата`: {
+			words:    fmt.Sprintf(`%s в 18:00 собрание`, future.Format(`01.02`)),
+			reminder: domain.NewReminder(0, fmt.Sprintf(`%s в 18:00 собрание`, future.Format(`01.02`)), time.Until(future.Add(18*time.Hour))),
 		},
 	}
 

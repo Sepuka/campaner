@@ -22,7 +22,7 @@ func (obj *TimeParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	)
 
 	if when, rest, err = when.ApplyTime(words); err != nil {
-		if errors.GetType(err) == errors.NotATimeError {
+		if errors.IsNotATimeError(err) {
 			return words[1:], nil
 		}
 		return words, err

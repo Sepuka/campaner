@@ -23,6 +23,13 @@ func (d *Date) IsPast() bool {
 	return d.date.Before(time.Now())
 }
 
+func (d *Date) IsToday() bool {
+	var now = time.Now()
+	return now.Year() == d.date.Year() &&
+		now.Month() == d.date.Month() &&
+		now.Day() == d.date.Day()
+}
+
 func (d *Date) Add(t time.Duration) *Date {
 	return NewDate(d.date.Add(t))
 }
@@ -171,7 +178,7 @@ func (d *Date) onNextTimeHourPeriod(words []string) (*Date, []string, error) {
 
 	atTime = d.Add(time.Hour * time.Duration(value))
 	if atTime.IsPast() {
-		atTime = atTime.Add(day)
+		atTime = atTime.Add(Day)
 	}
 
 	return atTime, words[2:], nil

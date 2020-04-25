@@ -3,8 +3,10 @@ package calendar
 import "time"
 
 const (
-	sunday = time.Saturday + 1
-	day    = time.Hour * 24
+	daysOfAYear = 365
+	sunday      = time.Saturday + 1
+	Day         = time.Hour * 24
+	Year        = Day * daysOfAYear
 )
 
 func NextSunday() *Date {
@@ -17,53 +19,53 @@ func NextSunday() *Date {
 func NextMonday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Monday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Monday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Monday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Monday))
+	return NextSunday().Add(Day * time.Duration(time.Monday))
 }
 
 func NextTuesday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Tuesday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Tuesday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Tuesday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Tuesday))
+	return NextSunday().Add(Day * time.Duration(time.Tuesday))
 }
 
 func NextWednesday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Wednesday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Wednesday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Wednesday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Wednesday))
+	return NextSunday().Add(Day * time.Duration(time.Wednesday))
 }
 
 func NextThursday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Thursday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Thursday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Thursday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Thursday))
+	return NextSunday().Add(Day * time.Duration(time.Thursday))
 }
 
 func NextFriday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Friday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Friday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Friday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Friday))
+	return NextSunday().Add(Day * time.Duration(time.Friday))
 }
 
 func NextSaturday() *Date {
 	var today = time.Now().Weekday()
 	if today < time.Saturday {
-		return NewDate(LastMidnight()).Add(day * time.Duration(time.Saturday-today))
+		return NewDate(LastMidnight()).Add(Day * time.Duration(time.Saturday-today))
 	}
 
-	return NextSunday().Add(day * time.Duration(time.Saturday))
+	return NextSunday().Add(Day * time.Duration(time.Saturday))
 }

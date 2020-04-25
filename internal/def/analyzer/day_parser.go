@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	DateParserDef = `def.analyzer.parser.date`
+	DayParserDef = `def.analyzer.parser.day`
 )
 
 func init() {
 	def.Register(func(builder *di.Builder, cfg *config.Config) error {
 		return builder.Add(di.Def{
-			Name: DateParserDef,
+			Name: DayParserDef,
 			Tags: []di.Tag{
 				{
 					Name: ParserTagDef,
@@ -22,7 +22,7 @@ func init() {
 				},
 			},
 			Build: func(ctx def.Context) (interface{}, error) {
-				return analyzer.NewDateParser(), nil
+				return analyzer.NewDayParser(), nil
 			},
 		})
 	})

@@ -37,14 +37,6 @@ func (e calendarError) Wrapf(err error, msg string, args ...interface{}) error {
 	}
 }
 
-func GetType(err error) ErrorType {
-	if errType, ok := err.(calendarError); ok {
-		return errType.errorType
-	}
-
-	return NoType
-}
-
 func NewNotATimeError() error {
 	return calendarError{
 		errorType:     NotATimeError,
