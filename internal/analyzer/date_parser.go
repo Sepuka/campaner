@@ -18,39 +18,39 @@ func NewDateParser() *DateParser {
 
 func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
 	var (
-		date   time.Time
-		err    error
-		moment string
-		when   *calendar.Date
-		rest   []string
+		midnight         time.Time
+		err              error
+		moment           string
+		when             *calendar.Date
+		rest             []string
+		isEmptyStatement = len(words) == 0
+		maybeWithTime    = len(words) > 1
 	)
 
-	if len(words) == 0 {
+	if isEmptyStatement {
 		return words, nil
 	}
 
 	moment = words[0]
+	rest = []string{}
 
-	if date, err = time.Parse(`01.02`, moment); err != nil {
+	if midnight, err = time.Parse(calendar.DayMonthFormat, moment); err != nil {
 		return words[1:], err
 	}
-	date = time.Date(time.Now().Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.Local)
-	when = calendar.NewDate(date)
+	midnight = time.Date(time.Now().Year(), midnight.Month(), midnight.Day(), 9, 0, 0, 0, time.Local)
+	when = calendar.NewDate(midnight)
 
-	if len(words) > 1 {
+	if maybeWithTime {
 		if when, rest, err = when.ApplyTime(words[1:]); err != nil {
-			if errors.IsNotATimeError(err) {
-				when = calendar.GetNextPeriod(when)
+			if !errors.IsNotATimeError(err) {
+				return words[1:], err
 			}
 		}
-	} else {
-		when = calendar.GetNextPeriod(when)
-		rest = []string{}
 	}
 
 	if when.IsToday() && when.IsPast() {
 		// wrong behaviour when after 11 p.m.
-		when = calendar.GetNextPeriod(when)
+		when = calendar.GetNextPeriod(calendar.NewDate(time.Now()))
 	}
 
 	if when.IsPast() {
@@ -69,7 +69,7 @@ func (obj *DateParser) Glossary() []string {
 		patternList []string
 	)
 	for startDate.Before(finishDate) {
-		patternList = append(patternList, startDate.Format(`01.02`))
+		patternList = append(patternList, startDate.Format(calendar.DayMonthFormat))
 		startDate = startDate.Add(calendar.Day)
 	}
 

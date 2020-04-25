@@ -105,8 +105,8 @@ func (d *Date) onTimeParser(words []string) (*Date, []string, error) {
 	}
 
 	moment = words[1]
-	if atTime, err = time.Parse(`15:04:05`, moment); err != nil {
-		if atTime, err = time.Parse(`15:04`, moment); err != nil {
+	if atTime, err = time.Parse(HourMinuteSecondFormat, moment); err != nil {
+		if atTime, err = time.Parse(HourMinuteFormat, moment); err != nil {
 			return nil, words, errors.NewNotATimeError()
 		}
 	}
@@ -114,7 +114,7 @@ func (d *Date) onTimeParser(words []string) (*Date, []string, error) {
 	atTime = time.Date(d.date.Year(), d.date.Month(), d.date.Day(), atTime.Hour(), atTime.Minute(), 0, 0, time.Local)
 
 	if atTime.Before(time.Now()) {
-		atTime = atTime.Add(24 * time.Hour)
+		atTime = atTime.Add(Day)
 	}
 
 	return NewDate(atTime), words[2:], nil

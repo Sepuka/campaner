@@ -142,17 +142,20 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 }
 
 func TestDateAnalyzer(t *testing.T) {
-	analyzer := NewAnalyzer(glossary)
-	now := time.Now()
-	future := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Add(calendar.Day * 3)
+	var (
+		analyzer       = NewAnalyzer(glossary)
+		now            = time.Now()
+		futureMidnight = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Add(calendar.Day * 3)
+		futureMoment   = fmt.Sprintf(`%s в 18:00 собрание`, futureMidnight.Format(calendar.DayMonthFormat))
+	)
 
 	var testCases = map[string]struct {
 		words    string
 		reminder *domain.Reminder
 	}{
 		`указано время и дата`: {
-			words:    fmt.Sprintf(`%s в 18:00 собрание`, future.Format(`01.02`)),
-			reminder: domain.NewReminder(0, fmt.Sprintf(`%s в 18:00 собрание`, future.Format(`01.02`)), time.Until(future.Add(18*time.Hour))),
+			words:    futureMoment,
+			reminder: domain.NewReminder(0, futureMoment, time.Until(futureMidnight.Add(18*time.Hour))),
 		},
 	}
 
