@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/calendar"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -105,5 +107,44 @@ func TestDayParser_Parse(t *testing.T) {
 			}
 			assert.InDelta(t, tt.args.reminder.When.Seconds(), actualReminder.When.Seconds(), 1)
 		})
+	}
+}
+
+func TestDayParser_ParseWeekdays(t *testing.T) {
+	var (
+		mondayMorning = calendar.NextMonday().Add(9 * time.Hour)
+	)
+
+	type args struct {
+		words    []string
+		reminder *domain.Reminder
+	}
+	tests := []struct {
+		name    string
+		args    args
+		rest    []string
+		wantErr bool
+	}{
+		{
+			name: `on Monday`,
+			args: args{
+				words:    []string{`понедельник`, `встреча`},
+				reminder: domain.NewReminder(0, `в понедельник встреча`, mondayMorning.Until()),
+			},
+			rest:    []string{`встреча`},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		obj := &DayParser{}
+		actualReminder := &domain.Reminder{}
+		got, err := obj.Parse(tt.args.words, actualReminder)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+			return
+		}
+		assert.Equal(t, tt.rest, got)
+		assert.InDelta(t, tt.args.reminder.When.Seconds(), actualReminder.When.Seconds(), 1)
 	}
 }

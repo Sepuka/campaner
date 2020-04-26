@@ -52,9 +52,10 @@ func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string
 			saturday:  calendar.NextSaturday(),
 			sunday:    calendar.NextSunday(),
 		}
+		isEmptyStatement = len(words) == 0
 	)
 
-	if len(words) == 0 {
+	if isEmptyStatement {
 		return words, nil
 	}
 	word = words[0]
@@ -71,6 +72,8 @@ func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string
 				when = calendar.GetNextPeriod(when)
 			case tomorrow:
 				when = calendar.NewDate(calendar.NextMorning())
+			default:
+				when = when.Morning()
 			}
 		}
 	}

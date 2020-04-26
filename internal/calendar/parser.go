@@ -72,6 +72,10 @@ func (d *Date) ApplyTime(words []string) (*Date, []string, error) {
 	return d, words, errors.NewNotATimeError()
 }
 
+func (d *Date) Morning() *Date {
+	return NewDate(d.setTime(9))
+}
+
 func (d *Date) findTimeOfDay(words []string) (*Date, []string, error) {
 	var moment = words[0]
 
