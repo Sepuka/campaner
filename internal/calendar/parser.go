@@ -1,10 +1,9 @@
 package calendar
 
 import (
-	"strconv"
 	"time"
 
-	"github.com/sepuka/campaner/internal/domain"
+	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/errors"
 )
@@ -38,190 +37,49 @@ func (d *Date) Until() time.Duration {
 	return time.Until(d.date)
 }
 
-func (d *Date) ApplyTime(words []string) (*Date, []string, error) {
+func (d *Date) ApplyTime(speech *speeches.Speech) (*Date, error) {
 	var (
 		dateTime *Date
 		err      error
-		rest     []string
 	)
 
-	if len(words) == 0 {
-		return nil, words, errors.NewNotATimeError()
+	if dateTime, err = findTimeOfADay(d, speech); err == nil {
+		return dateTime, nil
 	}
 
-	if dateTime, rest, err = d.findTimeOfDay(words); err == nil {
-		return dateTime, rest, nil
+	if dateTime, err = onTimeParser(d, speech); err == nil {
+		return dateTime, nil
 	}
 
-	if dateTime, rest, err = d.onTimeParser(words); err == nil {
-		return dateTime, rest, nil
+	if dateTime, err = overTimeParser(d, speech); err == nil {
+		return dateTime, nil
 	}
 
-	if dateTime, rest, err = d.overTimeParser(words); err == nil {
-		return dateTime, rest, nil
+	if dateTime, err = onNextTimePeriod(d, speech); err == nil {
+		return dateTime, nil
 	}
 
-	if dateTime, rest, err = d.onNextTimePeriod(words); err == nil {
-		return dateTime, rest, nil
+	if dateTime, err = onNextTimeHourPeriod(d, speech); err == nil {
+		return dateTime, nil
 	}
 
-	if dateTime, rest, err = d.onNextTimeHourPeriod(words); err == nil {
-		return dateTime, rest, nil
-	}
-
-	return d, words, errors.NewNotATimeError()
+	return d, errors.NewNotATimeError()
 }
 
 func (d *Date) Morning() *Date {
 	return NewDate(d.setTime(9))
 }
 
-func (d *Date) findTimeOfDay(words []string) (*Date, []string, error) {
-	var moment = words[0]
-
-	switch moment {
-	case `утром`:
-		return NewDate(d.setTime(9)), words[1:], nil
-	case `днем`:
-		return NewDate(d.setTime(12)), words[1:], nil
-	case `вечером`:
-		return NewDate(d.setTime(18)), words[1:], nil
-	case `ночью`:
-		return NewDate(d.setTime(23)), words[1:], nil
-	default:
-		return d, words, errors.NewNotATimeError()
-	}
+func (d *Date) Afternoon() *Date {
+	return NewDate(d.setTime(12))
 }
 
-func (d *Date) onTimeParser(words []string) (*Date, []string, error) {
-	var (
-		atTime time.Time
-		err    error
-		moment string
-	)
-
-	if len(words) < 2 {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	if words[0] != `в` {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	moment = words[1]
-	if atTime, err = time.Parse(HourMinuteSecondFormat, moment); err != nil {
-		if atTime, err = time.Parse(HourMinuteFormat, moment); err != nil {
-			return nil, words, errors.NewNotATimeError()
-		}
-	}
-
-	atTime = time.Date(d.date.Year(), d.date.Month(), d.date.Day(), atTime.Hour(), atTime.Minute(), 0, 0, time.Local)
-
-	if atTime.Before(time.Now()) {
-		atTime = atTime.Add(Day)
-	}
-
-	return NewDate(atTime), words[2:], nil
+func (d *Date) Evening() *Date {
+	return NewDate(d.setTime(18))
 }
 
-func (d *Date) onNextTimePeriod(words []string) (*Date, []string, error) {
-	var (
-		atTime            time.Time
-		err               error
-		moment, dimension string
-		value             float64
-		timeFrame         *domain.TimeFrame
-	)
-
-	if len(words) < 3 {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	if words[0] != `в` {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	moment = words[1]
-	dimension = words[2]
-	if value, err = strconv.ParseFloat(moment, 9); err != nil {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	timeFrame = domain.NewTimeFrame(value, dimension)
-	if atTime, err = timeFrame.GetTime(); err != nil {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	return NewDate(atTime), words[3:], nil
-}
-
-func (d *Date) onNextTimeHourPeriod(words []string) (*Date, []string, error) {
-	var (
-		atTime *Date
-		err    error
-		moment string
-		value  int64
-	)
-
-	if len(words) < 2 {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	if words[0] != `в` {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	moment = words[1]
-	if value, err = strconv.ParseInt(moment, 0, 8); err != nil {
-		return d, words, errors.NewNotATimeError()
-	}
-
-	if value < 0 || value > 23 {
-		return d, words, errors.NewNotATimeError()
-	}
-
-	atTime = d.Add(time.Hour * time.Duration(value))
-	if atTime.IsPast() {
-		atTime = atTime.Add(Day)
-	}
-
-	return atTime, words[2:], nil
-}
-
-func (d *Date) overTimeParser(words []string) (*Date, []string, error) {
-	var (
-		value             float64
-		dimension, moment string
-		restOffset        int
-		err               error
-		timeFrame         *domain.TimeFrame
-		duration          time.Duration
-	)
-
-	if len(words) < 2 {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	if words[0] != `через` {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	moment = words[1]
-	if value, err = strconv.ParseFloat(moment, 32); err != nil {
-		value = 1
-		dimension = moment
-		restOffset = 2
-	} else {
-		dimension = words[2]
-		restOffset = 3
-	}
-
-	timeFrame = domain.NewTimeFrame(value, dimension)
-	if duration, err = timeFrame.GetDuration(); err != nil {
-		return nil, words, errors.NewNotATimeError()
-	}
-
-	return NewDate(time.Now().Add(duration)), words[restOffset:], nil
+func (d *Date) Night() *Date {
+	return NewDate(d.setTime(23))
 }
 
 func (d *Date) setTime(value int) time.Time {

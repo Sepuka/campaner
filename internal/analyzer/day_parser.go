@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"github.com/sepuka/campaner/internal/errors"
+	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/domain"
 
@@ -34,11 +35,10 @@ func NewDayParser() *DayParser {
 	return &DayParser{}
 }
 
-func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
+func (obj *DayParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
+	const patternLength = 1
 	var (
-		offset       = 1
-		rest         []string
-		word         string
+		pattern      *speeches.Pattern
 		err          error
 		when         *calendar.Date
 		wordsDateMap = map[dayName]*calendar.Date{
@@ -52,26 +52,26 @@ func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string
 			saturday:  calendar.NextSaturday(),
 			sunday:    calendar.NextSunday(),
 		}
-		isEmptyStatement = len(words) == 0
+		ok bool
 	)
 
-	if isEmptyStatement {
-		return words, nil
-	}
-	word = words[0]
-
-	when, ok := wordsDateMap[dayName(word)]
-	if ok == false {
-		return words, errors.NewUnConsistentGlossaryError(word, obj.Glossary())
+	if pattern, err = speech.TryPattern(patternLength); err != nil {
+		return err
 	}
 
-	if when, rest, err = when.ApplyTime(words[offset:]); err != nil {
+	if when, ok = wordsDateMap[dayName(pattern.Origin())]; ok == false {
+		return errors.NewUnConsistentGlossaryError(pattern.Origin(), obj.Glossary())
+	}
+
+	if err = speech.ApplyPattern(pattern); err != nil {
+		return err
+	}
+
+	if when, err = when.ApplyTime(speech); err != nil {
 		if errors.IsNotATimeError(err) {
-			switch dayName(word) {
+			switch dayName(pattern.Origin()) {
 			case today:
 				when = calendar.GetNextPeriod(when)
-			case tomorrow:
-				when = calendar.NewDate(calendar.NextMorning())
 			default:
 				when = when.Morning()
 			}
@@ -79,7 +79,7 @@ func (obj *DayParser) Parse(words []string, reminder *domain.Reminder) ([]string
 	}
 	reminder.When = when.Until()
 
-	return rest, nil
+	return nil
 }
 
 func (obj *DayParser) Glossary() []string {

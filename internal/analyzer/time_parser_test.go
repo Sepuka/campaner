@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/speeches"
+
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/stretchr/testify/assert"
@@ -13,62 +15,62 @@ import (
 func TestOverTimeParser(t *testing.T) {
 	parser := NewTimeParser()
 	var testCases = map[string]struct {
-		words    []string
+		speech   *speeches.Speech
 		rest     []string
 		reminder *domain.Reminder
 	}{
 		`через секунду`: {
-			words:    []string{`через`, `секунду`, `действие`},
+			speech:   speeches.NewSpeech(`через секунду действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Second),
 		},
 		`через одну секунду`: {
-			words:    []string{`через`, `1`, `секунду`, `действие`},
+			speech:   speeches.NewSpeech(`через 1 секунду действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Second),
 		},
 		`через 2 секунды`: {
-			words:    []string{`через`, `2`, `секунды`, `действие`},
+			speech:   speeches.NewSpeech(`через 2 секунды действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, 2*time.Second),
 		},
 		`через 5 сек`: {
-			words:    []string{`через`, `5`, `сек`},
+			speech:   speeches.NewSpeech(`через 5 сек`),
 			rest:     []string{},
 			reminder: domain.NewReminder(0, ``, 5*time.Second),
 		},
 		`через минуту`: {
-			words:    []string{`через`, `минуту`, `действие`},
+			speech:   speeches.NewSpeech(`через минуту действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Minute),
 		},
 		`через одну минуту`: {
-			words:    []string{`через`, `1`, `минуту`, `действие`},
+			speech:   speeches.NewSpeech(`через 1 минуту действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Minute),
 		},
 		`через 2 минуты`: {
-			words:    []string{`через`, `2`, `минуты`, `действие`},
+			speech:   speeches.NewSpeech(`через 2 минуты действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, 2*time.Minute),
 		},
 		`через час`: {
-			words:    []string{`через`, `час`, `действие`},
+			speech:   speeches.NewSpeech(`через час действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Hour),
 		},
 		`через один час`: {
-			words:    []string{`через`, `1`, `час`, `действие`},
+			speech:   speeches.NewSpeech(`через 1 час действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, time.Hour),
 		},
 		`через 1.5 часа`: {
-			words:    []string{`через`, `1.5`, `часа`, `действие`},
+			speech:   speeches.NewSpeech(`через 1.5 часа действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, 90*time.Minute),
 		},
 		`через 2 часа`: {
-			words:    []string{`через`, `2`, `часа`, `действие`},
+			speech:   speeches.NewSpeech(`через 2 часа действие`),
 			rest:     []string{`действие`},
 			reminder: domain.NewReminder(0, ``, 2*time.Hour),
 		},
@@ -77,8 +79,7 @@ func TestOverTimeParser(t *testing.T) {
 	for testName, testCase := range testCases {
 		testError := fmt.Sprintf(`test "%s" error`, testName)
 		actualReminder := &domain.Reminder{}
-		rest, err := parser.Parse(testCase.words, actualReminder)
-		assert.Equal(t, testCase.rest, rest, testError)
+		err := parser.Parse(testCase.speech, actualReminder)
 		assert.InDelta(t, testCase.reminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.NoError(t, err, testError)
 	}
@@ -93,23 +94,22 @@ func TestOnTimeParser(t *testing.T) {
 	}
 
 	var testCases = map[string]struct {
-		words    []string
+		speech   *speeches.Speech
 		rest     []string
 		reminder *domain.Reminder
 	}{
 		`в 15:00 совершить действие`: {
-			words:    []string{`в`, `15:00`, `совершить`, `действие`},
+			speech:   speeches.NewSpeech(`в 15:00 совершить действие`),
 			rest:     []string{`совершить`, `действие`},
 			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
 		},
 		`в 15 часов совершить действие`: {
-			words:    []string{`в`, `15`, `часов`, `совершить`, `действие`},
+			speech:   speeches.NewSpeech(`в 15 часов совершить действие`),
 			rest:     []string{`совершить`, `действие`},
 			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
 		},
 		`в 15 совещание`: {
-			words:    []string{`в`, `15`, `совещание`},
-			rest:     []string{`совещание`},
+			speech:   speeches.NewSpeech(`в 15 совещание`),
 			reminder: domain.NewReminder(0, ``, time.Until(nextDateTime)),
 		},
 	}
@@ -117,8 +117,7 @@ func TestOnTimeParser(t *testing.T) {
 	for testName, testCase := range testCases {
 		testError := fmt.Sprintf(`test "%s" error`, testName)
 		actualReminder := &domain.Reminder{}
-		rest, err := parser.Parse(testCase.words, actualReminder)
-		assert.Equal(t, testCase.rest, rest, testError)
+		err := parser.Parse(testCase.speech, actualReminder)
 		assert.InDelta(t, testCase.reminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.NoError(t, err, testError)
 	}

@@ -3,6 +3,8 @@ package analyzer
 import (
 	"time"
 
+	"github.com/sepuka/campaner/internal/speeches"
+
 	"github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -16,35 +18,32 @@ func NewDateParser() *DateParser {
 	return &DateParser{}
 }
 
-func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
+func (obj *DateParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
+	const patternLength = 1
 	var (
-		midnight         time.Time
-		err              error
-		moment           string
-		when             *calendar.Date
-		rest             []string
-		isEmptyStatement = len(words) == 0
-		maybeWithTime    = len(words) > 1
+		midnight time.Time
+		err      error
+		pattern  *speeches.Pattern
+		when     *calendar.Date
 	)
 
-	if isEmptyStatement {
-		return words, nil
+	if pattern, err = speech.TryPattern(patternLength); err != nil {
+		return err
 	}
 
-	moment = words[0]
-	rest = []string{}
-
-	if midnight, err = time.Parse(calendar.DayMonthFormat, moment); err != nil {
-		return words[1:], err
+	if midnight, err = time.Parse(calendar.DayMonthFormat, pattern.Origin()); err != nil {
+		return err
 	}
 	midnight = time.Date(time.Now().Year(), midnight.Month(), midnight.Day(), 9, 0, 0, 0, time.Local)
 	when = calendar.NewDate(midnight)
 
-	if maybeWithTime {
-		if when, rest, err = when.ApplyTime(words[1:]); err != nil {
-			if !errors.IsNotATimeError(err) {
-				return words[1:], err
-			}
+	if err = speech.ApplyPattern(pattern); err != nil {
+		return err
+	}
+
+	if when, err = when.ApplyTime(speech); err != nil {
+		if !errors.IsNotATimeError(err) {
+			return err
 		}
 	}
 
@@ -59,7 +58,7 @@ func (obj *DateParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 
 	reminder.When = when.Until()
 
-	return rest, nil
+	return nil
 }
 
 func (obj *DateParser) Glossary() []string {

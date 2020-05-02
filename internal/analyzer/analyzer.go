@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sepuka/campaner/internal/speeches"
+
 	"github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/domain"
 )
 
-const MaxWordsLength = 100
-
 type Parser interface {
-	Parse([]string, *domain.Reminder) ([]string, error)
+	Parse(*speeches.Speech, *domain.Reminder) error
 	Glossary() []string
 	PatternList() []string
 }
@@ -30,21 +30,22 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 }
 
 func (obj *Analyzer) Analyze(text string, reminder *domain.Reminder) {
-	words := strings.SplitN(strings.ToLower(text), ` `, MaxWordsLength)
-	obj.buildReminder(words, reminder)
+	obj.buildReminder(speeches.NewSpeech(text), reminder)
 }
 
-func (obj *Analyzer) buildReminder(words []string, reminder *domain.Reminder) {
-	if len(words) == 0 {
+func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder) {
+	const patternLength = 1
+	var (
+		err     error
+		pattern *speeches.Pattern
+	)
+
+	if pattern, err = speech.TryPattern(patternLength); err != nil {
 		return
 	}
 
-	var (
-		rest []string
-		err  error
-	)
-	if parser, ok := obj.glossary[words[0]]; ok {
-		if rest, err = parser.Parse(words, reminder); err != nil {
+	if parser, ok := obj.glossary[pattern.Origin()]; ok {
+		if err = parser.Parse(speech, reminder); err != nil {
 			var (
 				patterns, what string
 			)
@@ -61,8 +62,10 @@ func (obj *Analyzer) buildReminder(words []string, reminder *domain.Reminder) {
 			return
 		}
 	} else {
-		rest = words[1:]
+		if err = speech.ApplyPattern(pattern); err != nil {
+			return
+		}
 	}
 
-	obj.buildReminder(rest, reminder)
+	obj.buildReminder(speech, reminder)
 }

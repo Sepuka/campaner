@@ -7,6 +7,11 @@ const (
 	UnknownDimensionError
 	NotATimeError
 	InvalidTimeError
+
+	SpeechIsEmptyError
+	SpeechIsOverError
+
+	PatternLengthIncorrect
 )
 
 type ErrorType uint

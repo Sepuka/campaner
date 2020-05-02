@@ -3,6 +3,8 @@ package analyzer
 import (
 	"strings"
 
+	"github.com/sepuka/campaner/internal/speeches"
+
 	"github.com/sepuka/campaner/internal/domain"
 )
 
@@ -29,7 +31,7 @@ func NewListParser(repo domain.ReminderRepository) *ListParser {
 	}
 }
 
-func (obj *ListParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
+func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
 	var (
 		err    error
 		userId = reminder.Whom
@@ -37,7 +39,7 @@ func (obj *ListParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 	)
 
 	if models, err = obj.reminderRepo.Scheduled(userId, limit); err != nil {
-		return words, err
+		return err
 	}
 
 	if models == nil {
@@ -50,7 +52,7 @@ func (obj *ListParser) Parse(words []string, reminder *domain.Reminder) ([]strin
 		reminder.What = strings.Join(schedule, "\r\n")
 	}
 
-	return words[1:], err
+	return err
 }
 
 func (obj *ListParser) Glossary() []string {

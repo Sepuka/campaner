@@ -3,6 +3,7 @@ package analyzer
 import (
 	"github.com/sepuka/campaner/internal/calendar"
 	"github.com/sepuka/campaner/internal/errors"
+	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/domain"
 )
@@ -14,23 +15,28 @@ func NewTimeParser() *TimeParser {
 	return &TimeParser{}
 }
 
-func (obj *TimeParser) Parse(words []string, reminder *domain.Reminder) ([]string, error) {
+func (obj *TimeParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
+	const patternLength = 1
 	var (
-		rest []string
-		err  error
-		when = calendar.NewDate(calendar.LastMidnight())
+		err     error
+		when    = calendar.NewDate(calendar.LastMidnight())
+		pattern *speeches.Pattern
 	)
 
-	if when, rest, err = when.ApplyTime(words); err != nil {
+	if pattern, err = speech.TryPattern(patternLength); err != nil {
+		return err
+	}
+
+	if when, err = when.ApplyTime(speech); err != nil {
 		if errors.IsNotATimeError(err) {
-			return words[1:], nil
+			return speech.ApplyPattern(pattern)
 		}
-		return words, err
+		return err
 	}
 
 	reminder.When = when.Until()
 
-	return rest, err
+	return nil
 }
 
 func (obj *TimeParser) Glossary() []string {
