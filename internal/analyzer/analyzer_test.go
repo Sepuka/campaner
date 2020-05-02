@@ -18,6 +18,7 @@ var (
 		NewTimeParser(),
 		NewDayParser(),
 		NewDateParser(),
+		NewTimesOfDayParser(),
 	}
 	glossary = make(map[string]Parser)
 )
@@ -74,6 +75,22 @@ func TestNewAnalyzer(t *testing.T) {
 		`завтра в 09:23 отвести детей в школу`: {
 			words:    `завтра в 09:23 отвести детей в школу`,
 			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(tomorrowMorning.Add(23*time.Minute))),
+		},
+		`утром`: {
+			words:    `утром`,
+			reminder: domain.NewReminder(0, `утром`, time.Until(tomorrowMorning)),
+		},
+		`днем`: {
+			words:    `днем`,
+			reminder: domain.NewReminder(0, `днем`, time.Until(tomorrowMorning.Add(3*time.Hour))),
+		},
+		`вечером`: {
+			words:    `вечером`,
+			reminder: domain.NewReminder(0, `вечером`, time.Until(tomorrowMorning.Add(9*time.Hour))),
+		},
+		`ночью`: {
+			words:    `ночью`,
+			reminder: domain.NewReminder(0, `ночью`, time.Until(tomorrowMorning.Add(14*time.Hour))),
 		},
 	}
 
