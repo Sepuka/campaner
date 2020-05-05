@@ -1,6 +1,8 @@
 package analyzer
 
 import (
+	"time"
+
 	"github.com/sepuka/campaner/internal/errors"
 	"github.com/sepuka/campaner/internal/speeches"
 
@@ -71,7 +73,7 @@ func (obj *DayParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) 
 		if errors.IsNotATimeError(err) {
 			switch dayName(pattern.Origin()) {
 			case today:
-				when = calendar.GetNextPeriod(when)
+				when = calendar.GetNextPeriod(calendar.NewDate(time.Now()))
 			default:
 				when = when.Morning()
 			}

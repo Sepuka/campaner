@@ -41,16 +41,6 @@ func TestMain(m *testing.M) {
 
 func TestNewAnalyzer(t *testing.T) {
 	analyzer := NewAnalyzer(glossary)
-	now := time.Now()
-	day := now.Day()
-	if now.Hour() > 22 && now.Minute() > 15 {
-		day++
-	}
-	nextDateTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 15, 0, 0, time.Local)
-	if now.After(nextDateTime) {
-		nextDateTime = nextDateTime.Add(24 * time.Hour)
-	}
-	tomorrowMorning := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, time.Local).Add(24 * time.Hour)
 
 	var testCases = map[string]struct {
 		words    string
@@ -68,29 +58,33 @@ func TestNewAnalyzer(t *testing.T) {
 			words:    `напомни мне через 25 секунд что-то сделать`,
 			reminder: domain.NewReminder(0, `напомни мне через 25 секунд что-то сделать`, time.Duration(25)*time.Second),
 		},
-		`напомни в 22:15 что-то сделать`: {
-			words:    `напомни В 22:15 что-то сделать`,
-			reminder: domain.NewReminder(0, `напомни В 22:15 что-то сделать`, time.Until(nextDateTime)),
+		`напомни в 23:15 что-то сделать`: {
+			words:    `напомни В 23:15 что-то сделать`,
+			reminder: domain.NewReminder(0, `напомни В 23:15 что-то сделать`, time.Until(calendar.NextNight().Add(15*time.Minute))),
 		},
 		`завтра в 09:23 отвести детей в школу`: {
 			words:    `завтра в 09:23 отвести детей в школу`,
-			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(tomorrowMorning.Add(23*time.Minute))),
+			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(calendar.NextMorning().Add(23*time.Minute))),
+		},
+		`сегодня починить кофеварку`: {
+			words:    `сегодня починить кофеварку`,
+			reminder: domain.NewReminder(0, `сегодня починить кофеварку`, calendar.GetNextPeriod(calendar.NewDate(time.Now())).Until()),
 		},
 		`утром`: {
-			words:    `утром`,
-			reminder: domain.NewReminder(0, `утром`, time.Until(tomorrowMorning)),
+			words:    `утром купить хлеба`,
+			reminder: domain.NewReminder(0, `утром купить хлеба`, time.Until(calendar.NextMorning())),
 		},
 		`днем`: {
 			words:    `днем`,
-			reminder: domain.NewReminder(0, `днем`, time.Until(tomorrowMorning.Add(3*time.Hour))),
+			reminder: domain.NewReminder(0, `днем`, time.Until(calendar.NextAfternoon())),
 		},
 		`вечером`: {
 			words:    `вечером`,
-			reminder: domain.NewReminder(0, `вечером`, time.Until(tomorrowMorning.Add(9*time.Hour))),
+			reminder: domain.NewReminder(0, `вечером`, time.Until(calendar.NextEvening())),
 		},
 		`ночью`: {
 			words:    `ночью`,
-			reminder: domain.NewReminder(0, `ночью`, time.Until(tomorrowMorning.Add(14*time.Hour))),
+			reminder: domain.NewReminder(0, `ночью`, time.Until(calendar.NextNight())),
 		},
 	}
 

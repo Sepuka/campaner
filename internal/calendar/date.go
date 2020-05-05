@@ -9,9 +9,33 @@ func LastMidnight() time.Time {
 }
 
 func NextMidnight() time.Time {
-	return LastMidnight().Add(time.Hour * 24)
+	return LastMidnight().Add(Day)
 }
 
 func NextMorning() time.Time {
-	return NextMidnight().Add(time.Hour * 9)
+	return nextPartOfADay(9)
+}
+
+func NextAfternoon() time.Time {
+	return nextPartOfADay(12)
+}
+
+func NextEvening() time.Time {
+	return nextPartOfADay(18)
+}
+
+func NextNight() time.Time {
+	return nextPartOfADay(23)
+}
+
+func nextPartOfADay(hour int) time.Time {
+	var (
+		now         = time.Now()
+		nextMorning = time.Date(now.Year(), now.Month(), now.Day(), hour, 0, 0, 0, time.Local)
+	)
+	if now.Hour() >= hour {
+		nextMorning = nextMorning.Add(Day)
+	}
+
+	return nextMorning
 }
