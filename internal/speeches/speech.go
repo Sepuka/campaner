@@ -33,10 +33,6 @@ func NewSpeech(text string) *Speech {
 	}
 }
 
-func (s *Speech) IsTheEnd() bool {
-	return len(s.words) == 0 || len(s.words)-1 == s.pointer
-}
-
 func (s *Speech) TryPattern(length int) (*Pattern, error) {
 	if len(s.words) < s.pointer+length {
 		return nil, errors.NewSpeechIsOverError(s.pointer, s.original)

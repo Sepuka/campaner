@@ -33,10 +33,15 @@ func NewListParser(repo domain.ReminderRepository) *ListParser {
 
 func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
 	var (
-		err    error
-		userId = reminder.Whom
-		models []domain.Reminder
+		err     error
+		userId  = reminder.Whom
+		models  []domain.Reminder
+		pattern *speeches.Pattern
 	)
+
+	if pattern, err = speech.TryPattern(1); err != nil {
+		return err
+	}
 
 	if models, err = obj.reminderRepo.Scheduled(userId, limit); err != nil {
 		return err
@@ -52,7 +57,7 @@ func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 		reminder.What = strings.Join(schedule, "\r\n")
 	}
 
-	return err
+	return speech.ApplyPattern(pattern)
 }
 
 func (obj *ListParser) Glossary() []string {

@@ -118,42 +118,6 @@ func TestSpeech_GetPattern(t *testing.T) {
 	}
 }
 
-func TestSpeech_IsTheEnd(t *testing.T) {
-	tests := []struct {
-		name   string
-		speech *Speech
-		want   bool
-	}{
-		{
-			name:   `empty speech`,
-			speech: NewSpeech(``),
-			want:   true,
-		},
-		{
-			name:   `one word`,
-			speech: NewSpeech(`word`),
-			want:   true,
-		},
-		{
-			name:   `two words`,
-			speech: NewSpeech(`two words`),
-			want:   false,
-		},
-		{
-			name: `two words`,
-			speech: &Speech{
-				words:   []string{`two`, `words`},
-				pointer: 1,
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		got := tt.speech.IsTheEnd()
-		assert.Equal(t, tt.want, got)
-	}
-}
-
 func TestSpeech_ApplyPattern(t *testing.T) {
 	tests := []struct {
 		speech          *Speech
