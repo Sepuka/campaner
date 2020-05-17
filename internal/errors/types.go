@@ -27,3 +27,7 @@ func GetType(err error) ErrorType {
 func IsNotATimeError(err error) bool {
 	return GetType(err) == NotATimeError
 }
+
+func IsSpeechIsOverError(err error) bool {
+	return GetType(err) == SpeechIsOverError
+}

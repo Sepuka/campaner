@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -31,43 +32,61 @@ func TestDayParser_Parse(t *testing.T) {
 		{
 			name: `any time on tomorrow`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowMorningTime)),
+				speech: speeches.NewSpeech(`завтра`),
+				reminder: &domain.Reminder{
+					Subject: []string{`завтра`},
+					When:    time.Until(tomorrowMorningTime),
+				},
 			},
 		},
 		{
 			name: `tomorrow morning`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра утром`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowMorningTime)),
+				speech: speeches.NewSpeech(`завтра утром`),
+				reminder: &domain.Reminder{
+					Subject: []string{`завтра`},
+					When:    time.Until(tomorrowMorningTime),
+				},
 			},
 		},
 		{
 			name: `tomorrow at 11:23 a.m.`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра в 11:23`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowMorningTime.Add(143*time.Minute))),
+				speech: speeches.NewSpeech(`завтра в 11:23`),
+				reminder: &domain.Reminder{
+					Subject: strings.Split(`завтра в 11:23`, ` `),
+					When:    time.Until(tomorrowMorningTime.Add(143 * time.Minute)),
+				},
 			},
 		},
 		{
 			name: `tomorrow afternoon`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра днем`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowAfternoonTime)),
+				speech: speeches.NewSpeech(`завтра днем`),
+				reminder: &domain.Reminder{
+					Subject: strings.Split(`завтра днем`, ` `),
+					When:    time.Until(tomorrowAfternoonTime),
+				},
 			},
 		},
 		{
 			name: `tomorrow evening`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра вечером`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowEveningTime)),
+				speech: speeches.NewSpeech(`завтра вечером`),
+				reminder: &domain.Reminder{
+					Subject: strings.Split(`завтра вечером`, ` `),
+					When:    time.Until(tomorrowEveningTime),
+				},
 			},
 		},
 		{
 			name: `tomorrow night`,
 			args: args{
-				speech:   speeches.NewSpeech(`завтра ночью`),
-				reminder: domain.NewReminder(0, ``, time.Until(tomorrowNightTime)),
+				speech: speeches.NewSpeech(`завтра ночью`),
+				reminder: &domain.Reminder{
+					Subject: strings.Split(`завтра ночью`, ` `),
+					When:    time.Until(tomorrowNightTime),
+				},
 			},
 		},
 	}
@@ -96,8 +115,11 @@ func TestDayParser_ParseWeekdays(t *testing.T) {
 		{
 			name: `on Monday`,
 			args: args{
-				speech:   speeches.NewSpeech(`понедельник встреча`),
-				reminder: domain.NewReminder(0, `в понедельник встреча`, mondayMorning.Until()),
+				speech: speeches.NewSpeech(`понедельник встреча`),
+				reminder: &domain.Reminder{
+					Subject: strings.Split(`в понедельник встреча`, ` `),
+					When:    mondayMorning.Until(),
+				},
 			},
 		},
 	}

@@ -1,6 +1,10 @@
 package speeches
 
-import "github.com/sepuka/campaner/internal/errors"
+import (
+	"strings"
+
+	"github.com/sepuka/campaner/internal/errors"
+)
 
 type Pattern struct {
 	value []string
@@ -14,6 +18,10 @@ func NewPattern(slice []string) *Pattern {
 
 func (p *Pattern) Origin() string {
 	return p.value[0]
+}
+
+func (p *Pattern) String() string {
+	return strings.Join(p.value, ` `)
 }
 
 func (p *Pattern) MakeOut(words ...*string) error {

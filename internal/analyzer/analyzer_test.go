@@ -3,6 +3,7 @@ package analyzer
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ var (
 		NewDayParser(),
 		NewDateParser(),
 		NewTimesOfDayParser(),
+		NewDateTimeAggregateParser([]Parser{NewTimeParser(), NewDayParser()}),
 	}
 	glossary = make(map[string]Parser)
 )
@@ -43,60 +45,88 @@ func TestNewAnalyzer(t *testing.T) {
 	analyzer := NewAnalyzer(glossary)
 
 	var testCases = map[string]struct {
-		words    string
-		reminder *domain.Reminder
+		speech           string
+		expectedReminder *domain.Reminder
 	}{
-		`empty rest when empty words`: {
-			words:    ``,
-			reminder: &domain.Reminder{},
+		`empty rest when empty speech`: {
+			speech: ``,
+			expectedReminder: &domain.Reminder{
+				Subject: []string{`ring!`},
+			},
 		},
 		`unknown pattern`: {
-			words:    `abc`,
-			reminder: domain.NewReminder(0, `abc`, time.Nanosecond),
+			speech: `abc`,
+			expectedReminder: &domain.Reminder{
+				Subject: []string{`abc`},
+			},
 		},
 		`напомни мне через 25 секунд что-то сделать`: {
-			words:    `напомни мне через 25 секунд что-то сделать`,
-			reminder: domain.NewReminder(0, `напомни мне через 25 секунд что-то сделать`, time.Duration(25)*time.Second),
+			speech: `напомни мне через 25 секунд что-то сделать`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`напомни мне что-то сделать`, ` `),
+				When:    time.Duration(25) * time.Second,
+			},
 		},
 		`напомни в 23:15 что-то сделать`: {
-			words:    `напомни В 23:15 что-то сделать`,
-			reminder: domain.NewReminder(0, `напомни В 23:15 что-то сделать`, time.Until(calendar.NextNight().Add(15*time.Minute))),
+			speech: `напомни В 23:15 что-то сделать`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`напомни что-то сделать`, ` `),
+				When:    time.Until(calendar.NextNight().Add(15 * time.Minute)),
+			},
 		},
 		`завтра в 09:23 отвести детей в школу`: {
-			words:    `завтра в 09:23 отвести детей в школу`,
-			reminder: domain.NewReminder(0, `завтра в 09:23 отвести детей в школу`, time.Until(calendar.NextMorning().Add(23*time.Minute))),
+			speech: `завтра в 09:23 отвести детей в школу`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`отвести детей в школу`, ` `),
+				When:    time.Until(calendar.NextMorning().Add(23 * time.Minute)),
+			},
 		},
 		`сегодня починить кофеварку`: {
-			words:    `сегодня починить кофеварку`,
-			reminder: domain.NewReminder(0, `сегодня починить кофеварку`, calendar.GetNextPeriod(calendar.NewDate(time.Now())).Until()),
+			speech: `сегодня починить кофеварку`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`починить кофеварку`, ` `),
+				When:    calendar.GetNextPeriod(calendar.NewDate(time.Now())).Until(),
+			},
 		},
 		`утром`: {
-			words:    `утром купить хлеба`,
-			reminder: domain.NewReminder(0, `утром купить хлеба`, time.Until(calendar.NextMorning())),
+			speech: `утром купить хлеба`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`купить хлеба`, ` `),
+				When:    time.Until(calendar.NextMorning()),
+			},
 		},
 		`днем`: {
-			words:    `днем`,
-			reminder: domain.NewReminder(0, `днем`, time.Until(calendar.NextAfternoon())),
+			speech: `днем`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`ring!`, ` `),
+				When:    time.Until(calendar.NextAfternoon()),
+			},
 		},
 		`вечером`: {
-			words:    `вечером`,
-			reminder: domain.NewReminder(0, `вечером`, time.Until(calendar.NextEvening())),
+			speech: `вечером`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`ring!`, ` `),
+				When:    time.Until(calendar.NextEvening()),
+			},
 		},
 		`ночью`: {
-			words:    `ночью`,
-			reminder: domain.NewReminder(0, `ночью`, time.Until(calendar.NextNight())),
+			speech: `ночью`,
+			expectedReminder: &domain.Reminder{
+				Subject: strings.Split(`ring!`, ` `),
+				When:    time.Until(calendar.NextNight()),
+			},
 		},
 	}
 
 	for testName, testCase := range testCases {
 		var (
 			testError        = fmt.Sprintf(`test "%s" error`, testName)
-			expectedReminder = testCase.reminder
-			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
+			expectedReminder = testCase.expectedReminder
+			actualReminder   = domain.NewReminder(0)
 		)
-		analyzer.Analyze(testCase.words, actualReminder)
+		analyzer.Analyze(testCase.speech, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
-		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
+		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
 }
 
@@ -107,36 +137,60 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 		reminder *domain.Reminder
 	}{
 		`в понедельник и время с минутами`: {
-			words:    `в понедельник в 16:00 часов встреча`,
-			reminder: domain.NewReminder(0, `в понедельник в 16:00 часов встреча`, calendar.NextMonday().Add(time.Hour*16).Until()),
+			words: `в понедельник в 16:00 часов встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextMonday().Add(time.Hour * 16).Until(),
+			},
 		},
 		`во вторник и время с минутами`: {
-			words:    `во вторник в 17:00 часов встреча`,
-			reminder: domain.NewReminder(0, `во вторник в 17:00 часов встреча`, calendar.NextTuesday().Add(time.Hour*17).Until()),
+			words: `во вторник в 17:00 часов встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextTuesday().Add(time.Hour * 17).Until(),
+			},
 		},
 		`в среду и время с минутами`: {
-			words:    `в среду в 18:00 часов встреча`,
-			reminder: domain.NewReminder(0, `в среду в 18:00 часов встреча`, calendar.NextWednesday().Add(time.Hour*18).Until()),
+			words: `в среду в 18:00 часов встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextWednesday().Add(time.Hour * 18).Until(),
+			},
 		},
 		`в четверг и время с минутами`: {
-			words:    `в четверг в 19:00 часов встреча`,
-			reminder: domain.NewReminder(0, `в четверг в 19:00 часов встреча`, calendar.NextThursday().Add(time.Hour*19).Until()),
+			words: `в четверг в 19:00 часов встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextThursday().Add(time.Hour * 19).Until(),
+			},
 		},
 		`в пятницу и время с минутами`: {
-			words:    `в пятницу в 20:00 часов встреча`,
-			reminder: domain.NewReminder(0, `в пятницу в 20:00 часов встреча`, calendar.NextFriday().Add(time.Hour*20).Until()),
+			words: `в пятницу в 20:00 часов встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextFriday().Add(time.Hour * 20).Until(),
+			},
 		},
 		`в субботу и время с минутами`: {
-			words:    `в субботу в 21:00 час встреча`,
-			reminder: domain.NewReminder(0, `в субботу в 21:00 час встреча`, calendar.NextSaturday().Add(time.Hour*21).Until()),
+			words: `в субботу в 21:00 час встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextSaturday().Add(time.Hour * 21).Until(),
+			},
 		},
 		`в воскресенье и время с минутами`: {
-			words:    `в воскресенье в 22:00 часа встреча`,
-			reminder: domain.NewReminder(0, `в воскресенье в 22:00 часа встреча`, calendar.NextSunday().Add(time.Hour*22).Until()),
+			words: `в воскресенье в 22:00 часа встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`встреча`},
+				When:    calendar.NextSunday().Add(time.Hour * 22).Until(),
+			},
 		},
 		`день недели и время без минут`: {
-			words:    `В среду в 16 пройдет маленькая пятничная встреча.`,
-			reminder: domain.NewReminder(0, `В среду в 16 пройдет маленькая пятничная встреча.`, calendar.NextWednesday().Add(time.Hour*16).Until()),
+			words: `В среду в 16 пройдет маленькая пятничная встреча`,
+			reminder: &domain.Reminder{
+				Subject: []string{`пройдет`, `маленькая`, `пятничная`, `встреча`},
+				When:    calendar.NextWednesday().Add(time.Hour * 16).Until(),
+			},
 		},
 	}
 
@@ -144,11 +198,11 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 		var (
 			testError        = fmt.Sprintf(`test "%s" error`, testName)
 			expectedReminder = testCase.reminder
-			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
+			actualReminder   = &domain.Reminder{}
 		)
 		analyzer.Analyze(testCase.words, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
-		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
+		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
 }
 
@@ -165,8 +219,11 @@ func TestDateAnalyzer(t *testing.T) {
 		reminder *domain.Reminder
 	}{
 		`указано время и дата`: {
-			words:    futureMoment,
-			reminder: domain.NewReminder(0, futureMoment, time.Until(futureMidnight.Add(18*time.Hour))),
+			words: futureMoment,
+			reminder: &domain.Reminder{
+				Subject: []string{`собрание`},
+				When:    time.Until(futureMidnight.Add(18 * time.Hour)),
+			},
 		},
 	}
 
@@ -174,10 +231,10 @@ func TestDateAnalyzer(t *testing.T) {
 		var (
 			testError        = fmt.Sprintf(`test "%s" error`, testName)
 			expectedReminder = testCase.reminder
-			actualReminder   = domain.NewReminder(0, testCase.words, time.Nanosecond)
+			actualReminder   = &domain.Reminder{}
 		)
 		analyzer.Analyze(testCase.words, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
-		assert.Equal(t, expectedReminder.What, actualReminder.What, testError)
+		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
 }

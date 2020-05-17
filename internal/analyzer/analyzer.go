@@ -41,6 +41,9 @@ func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Rem
 	)
 
 	if pattern, err = speech.TryPattern(patternLength); err != nil {
+		if reminder.GetSubject() == `` {
+			reminder.AppendSubject(speeches.NewPattern([]string{`ring!`}))
+		}
 		return
 	}
 
@@ -65,6 +68,7 @@ func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Rem
 		if err = speech.ApplyPattern(pattern); err != nil {
 			return
 		}
+		reminder.AppendSubject(pattern)
 	}
 
 	obj.buildReminder(speech, reminder)

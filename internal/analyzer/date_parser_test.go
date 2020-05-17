@@ -34,34 +34,49 @@ func TestDateParser(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:     `some alone past date without a time`,
-			speech:   speeches.NewSpeech(pastDay.Format(calendar.DayMonthFormat)),
-			expected: domain.NewReminder(0, pastDay.Format(calendar.DayMonthFormat), time.Until(expectedPastDay)),
-			wantErr:  false,
+			name:   `some alone past date without a time`,
+			speech: speeches.NewSpeech(pastDay.Format(calendar.DayMonthFormat)),
+			expected: &domain.Reminder{
+				Subject: []string{pastDay.Format(calendar.DayMonthFormat)},
+				When:    time.Until(expectedPastDay),
+			},
+			wantErr: false,
 		},
 		{
-			name:     `some alone current date without a time`,
-			speech:   speeches.NewSpeech(now.Format(calendar.DayMonthFormat)),
-			expected: domain.NewReminder(0, now.Format(calendar.DayMonthFormat), expectedToday.Until()),
-			wantErr:  false,
+			name:   `some alone current date without a time`,
+			speech: speeches.NewSpeech(now.Format(calendar.DayMonthFormat)),
+			expected: &domain.Reminder{
+				Subject: []string{now.Format(calendar.DayMonthFormat)},
+				When:    expectedToday.Until(),
+			},
+			wantErr: false,
 		},
 		{
-			name:     `tomorrow without a time`,
-			speech:   speeches.NewSpeech(tomorrow.Format(calendar.DayMonthFormat)),
-			expected: domain.NewReminder(0, tomorrow.Format(calendar.DayMonthFormat), time.Until(tomorrowMorningTime)),
-			wantErr:  false,
+			name:   `tomorrow without a time`,
+			speech: speeches.NewSpeech(tomorrow.Format(calendar.DayMonthFormat)),
+			expected: &domain.Reminder{
+				Subject: []string{tomorrow.Format(calendar.DayMonthFormat)},
+				When:    time.Until(tomorrowMorningTime),
+			},
+			wantErr: false,
 		},
 		{
-			name:     `tomorrow with a time`,
-			speech:   speeches.NewSpeech(fmt.Sprintf(`%s в 11:09`, tomorrow.Format(calendar.DayMonthFormat))),
-			expected: domain.NewReminder(0, tomorrow.Format(`02.01 в 11:09`), time.Until(tomorrowAt1109)),
-			wantErr:  false,
+			name:   `tomorrow with a time`,
+			speech: speeches.NewSpeech(fmt.Sprintf(`%s в 11:09`, tomorrow.Format(calendar.DayMonthFormat))),
+			expected: &domain.Reminder{
+				Subject: []string{tomorrow.Format(`02.01 в 11:09`)},
+				When:    time.Until(tomorrowAt1109),
+			},
+			wantErr: false,
 		},
 		{
-			name:     `tomorrow with incorrect time`,
-			speech:   speeches.NewSpeech(fmt.Sprintf(`%s в blah-blah`, tomorrow.Format(calendar.DayMonthFormat))),
-			expected: domain.NewReminder(0, tomorrow.Format(`02.01 в blah-blah`), time.Until(tomorrowMorningTime)),
-			wantErr:  false,
+			name:   `tomorrow with incorrect time`,
+			speech: speeches.NewSpeech(fmt.Sprintf(`%s в blah-blah`, tomorrow.Format(calendar.DayMonthFormat))),
+			expected: &domain.Reminder{
+				Subject: []string{tomorrow.Format(`02.01 в blah-blah`)},
+				When:    time.Until(tomorrowMorningTime),
+			},
+			wantErr: false,
 		},
 	}
 

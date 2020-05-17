@@ -2,6 +2,7 @@ package calendar
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -70,7 +71,22 @@ func onTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 		atTime = atTime.Add(Day)
 	}
 
-	return NewDate(atTime), speech.ApplyPattern(pattern)
+	if err = speech.ApplyPattern(pattern); err != nil {
+		return nil, err
+	}
+
+	if pattern, err = speech.TryPattern(1); err != nil {
+		if errors.IsSpeechIsOverError(err) {
+			return NewDate(atTime), nil
+		}
+		return nil, err
+	}
+
+	if strings.HasPrefix(pattern.Origin(), `час`) {
+		return NewDate(atTime), speech.ApplyPattern(pattern)
+	}
+
+	return NewDate(atTime), nil
 }
 
 func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {

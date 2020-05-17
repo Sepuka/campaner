@@ -18,7 +18,7 @@ func TestGetNextPeriod(t *testing.T) {
 		},
 		{
 			args: NewDate(time.Date(2020, 03, 14, 0, 1, 1, 0, time.Local)),
-			want: NewDate(time.Date(2020, 03, 14, 9, 1, 1, 0, time.Local)),
+			want: NewDate(time.Date(2020, 03, 14, 9, 0, 0, 0, time.Local)),
 		},
 		{
 			args: NewDate(time.Date(2020, 03, 14, 8, 0, 0, 0, time.Local)),

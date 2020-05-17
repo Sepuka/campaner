@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -19,8 +20,16 @@ func TestListNotificationsAnalyzer(t *testing.T) {
 	var (
 		repo      = mocks.ReminderRepository{}
 		reminders = []domain.Reminder{
-			*domain.NewReminder(0, `The first scheduled notification`, time.Second),
-			*domain.NewReminder(0, `The second scheduled notification`, time.Second),
+			{
+				Subject:  strings.Split(`The first scheduled notification`, ` `),
+				When:     time.Second,
+				NotifyAt: time.Date(1984, 8, 31, 0, 0, 0, 0, time.Local),
+			},
+			{
+				Subject:  strings.Split(`The second scheduled notification`, ` `),
+				When:     time.Second,
+				NotifyAt: time.Date(2000, 12, 31, 23, 59, 59, 0, time.Local),
+			},
 		}
 		actualReminder = domain.NewImmediateReminder(0, ``)
 		expectedText   = "\"The first scheduled notification\" at 1984-08-31 00:00:00\r\n" +
@@ -29,13 +38,11 @@ func TestListNotificationsAnalyzer(t *testing.T) {
 		speech = speeches.NewSpeech(`список`)
 	)
 
-	reminders[0].NotifyAt = time.Date(1984, 8, 31, 0, 0, 0, 0, time.Local)
-	reminders[1].NotifyAt = time.Date(2000, 12, 31, 23, 59, 59, 0, time.Local)
 	repo.On(`Scheduled`, mock.Anything, mock.Anything).Return(reminders, nil)
 
 	var parser = NewListParser(repo)
 	err = parser.Parse(speech, actualReminder)
-	assert.Equal(t, expectedText, actualReminder.What)
+	assert.Equal(t, expectedText, actualReminder.GetSubject())
 	assert.NoError(t, err)
 
 	patternWasApplied(t, speech)

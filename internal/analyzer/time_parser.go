@@ -2,7 +2,6 @@ package analyzer
 
 import (
 	"github.com/sepuka/campaner/internal/calendar"
-	"github.com/sepuka/campaner/internal/errors"
 	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -16,21 +15,12 @@ func NewTimeParser() *TimeParser {
 }
 
 func (obj *TimeParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
-	const patternLength = 1
 	var (
-		err     error
-		when    = calendar.NewDate(calendar.LastMidnight())
-		pattern *speeches.Pattern
+		err  error
+		when = calendar.NewDate(calendar.LastMidnight())
 	)
 
-	if pattern, err = speech.TryPattern(patternLength); err != nil {
-		return err
-	}
-
 	if when, err = when.ApplyTime(speech); err != nil {
-		if errors.IsNotATimeError(err) {
-			return speech.ApplyPattern(pattern)
-		}
 		return err
 	}
 
@@ -40,10 +30,7 @@ func (obj *TimeParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 }
 
 func (obj *TimeParser) Glossary() []string {
-	return []string{
-		`через`,
-		`в`,
-	}
+	return []string{}
 }
 
 func (obj *TimeParser) PatternList() []string {

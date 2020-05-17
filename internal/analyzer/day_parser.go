@@ -38,12 +38,36 @@ func NewDayParser() *DayParser {
 }
 
 func (obj *DayParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
-	const patternLength = 1
 	var (
-		pattern      *speeches.Pattern
-		err          error
-		when         *calendar.Date
-		wordsDateMap = map[dayName]*calendar.Date{
+		err  error
+		when *calendar.Date
+	)
+
+	if when, err = obj.findDay(speech); err != nil {
+		return err
+	}
+
+	if when, err = when.ApplyTime(speech); err != nil {
+		if errors.IsNotATimeError(err) {
+			if when.IsItToday() {
+				when = calendar.GetNextPeriod(calendar.NewDate(time.Now()))
+			} else {
+				when = when.Morning()
+			}
+		}
+	}
+	reminder.When = when.Until()
+
+	return nil
+}
+
+func (obj *DayParser) findDay(speech *speeches.Speech) (*calendar.Date, error) {
+	var (
+		pattern             *speeches.Pattern
+		err                 error
+		preposition, moment string
+		when                *calendar.Date
+		wordsDateMap        = map[dayName]*calendar.Date{
 			today:     calendar.NewDate(calendar.LastMidnight()),
 			tomorrow:  calendar.NewDate(calendar.NextMidnight()),
 			monday:    calendar.NextMonday(),
@@ -57,31 +81,53 @@ func (obj *DayParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) 
 		ok bool
 	)
 
-	if pattern, err = speech.TryPattern(patternLength); err != nil {
-		return err
+	if pattern, err = obj.getPattern(speech); err != nil {
+		return nil, err
 	}
 
-	if when, ok = wordsDateMap[dayName(pattern.Origin())]; ok == false {
-		return errors.NewUnConsistentGlossaryError(pattern.Origin(), obj.Glossary())
+	switch pattern.GetLength() {
+	case 2:
+		if err = pattern.MakeOut(&preposition, &moment); err != nil {
+			return nil, err
+		}
+	case 1:
+		if err = pattern.MakeOut(&moment); err != nil {
+			return nil, err
+		}
+	}
+
+	if when, ok = wordsDateMap[dayName(moment)]; ok == false {
+		return nil, errors.NewUnConsistentGlossaryError(pattern.Origin(), obj.Glossary())
 	}
 
 	if err = speech.ApplyPattern(pattern); err != nil {
-		return err
+		return nil, err
 	}
 
-	if when, err = when.ApplyTime(speech); err != nil {
-		if errors.IsNotATimeError(err) {
-			switch dayName(pattern.Origin()) {
-			case today:
-				when = calendar.GetNextPeriod(calendar.NewDate(time.Now()))
-			default:
-				when = when.Morning()
-			}
+	return when, nil
+}
+
+func (obj *DayParser) getPattern(speech *speeches.Speech) (*speeches.Pattern, error) {
+	var (
+		pattern             *speeches.Pattern
+		err                 error
+		preposition, moment string
+		prepositions        = map[string]bool{
+			`в`:  true,
+			`во`: true,
+		}
+	)
+
+	if pattern, err = speech.TryPattern(2); err == nil {
+		if err = pattern.MakeOut(&preposition, &moment); err != nil {
+			return nil, err
+		}
+		if _, ok := prepositions[preposition]; ok {
+			return pattern, nil
 		}
 	}
-	reminder.When = when.Until()
 
-	return nil
+	return speech.TryPattern(1)
 }
 
 func (obj *DayParser) Glossary() []string {

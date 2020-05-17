@@ -22,7 +22,7 @@ func (d *Date) IsPast() bool {
 	return d.date.Before(time.Now())
 }
 
-func (d *Date) IsToday() bool {
+func (d *Date) IsItToday() bool {
 	var now = time.Now()
 	return now.Year() == d.date.Year() &&
 		now.Month() == d.date.Month() &&

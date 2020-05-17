@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/go-pg/pg"
 
@@ -36,14 +39,13 @@ type (
 		NotifyAt   time.Time
 		When       time.Duration `sql:"-"`
 		Status     int
+		Subject    []string `sql:"-"`
 	}
 )
 
-func NewReminder(whom int, what string, when time.Duration) *Reminder {
+func NewReminder(whom int) *Reminder {
 	return &Reminder{
 		Whom: whom,
-		What: what,
-		When: when,
 	}
 }
 
@@ -66,6 +68,8 @@ func (r *Reminder) BeforeInsert(ctx context.Context, db orm.DB) error {
 	r.NotifyAt = time.Now().Add(r.When)
 	r.CreatedAt = time.Now()
 
+	r.What = r.GetSubject()
+
 	return nil
 }
 
@@ -73,14 +77,14 @@ func (r *Reminder) IsImmediate() bool {
 	return r.When < toShortTime
 }
 
-func (r *Reminder) IsValid() bool {
-	return r.When > 0
+func (r *Reminder) AppendSubject(pattern *speeches.Pattern) {
+	r.Subject = append(r.Subject, pattern.String())
 }
 
-func (r *Reminder) IsItToday() bool {
-	return time.Now().Add(r.When).Day() == time.Now().Day()
+func (r *Reminder) GetSubject() string {
+	return strings.Join(r.Subject, ` `)
 }
 
 func (r *Reminder) String() string {
-	return fmt.Sprintf(`"%s" at %s`, r.What, r.NotifyAt.Format(`2006-01-02 15:04:05`))
+	return fmt.Sprintf(`"%s" at %s`, r.GetSubject(), r.NotifyAt.Format(`2006-01-02 15:04:05`))
 }

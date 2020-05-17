@@ -44,11 +44,7 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 		err      error
 		output   = []byte(`ok`)
 		text     = req.Object.Message.Text
-		reminder = domain.NewReminder(
-			int(req.Object.Message.PeerId),
-			text,
-			time.Nanosecond,
-		)
+		reminder = domain.NewReminder(int(req.Object.Message.PeerId))
 	)
 
 	obj.analyzer.Analyze(text, reminder)

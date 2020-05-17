@@ -47,7 +47,7 @@ func (obj *DateParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 		}
 	}
 
-	if when.IsToday() && when.IsPast() {
+	if when.IsItToday() && when.IsPast() {
 		// wrong behaviour when after 11 p.m.
 		when = calendar.GetNextPeriod(calendar.NewDate(time.Now()))
 	}

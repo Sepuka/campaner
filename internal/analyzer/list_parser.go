@@ -50,11 +50,16 @@ func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 	if models == nil {
 		reminder.What = emptyTasksList
 	} else {
-		var schedule = make([]string, 0, len(models))
-		for _, m := range models {
-			schedule = append(schedule, m.String())
+		var (
+			schedule = make([]string, 0, len(models))
+			list     string
+		)
+		for _, model := range models {
+			schedule = append(schedule, model.String())
 		}
-		reminder.What = strings.Join(schedule, "\r\n")
+		list = strings.Join(schedule, "\r\n")
+		pattern = speeches.NewPattern([]string{list})
+		reminder.AppendSubject(pattern)
 	}
 
 	return speech.ApplyPattern(pattern)
