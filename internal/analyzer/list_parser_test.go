@@ -1,7 +1,6 @@
 package analyzer
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -21,12 +20,12 @@ func TestListNotificationsAnalyzer(t *testing.T) {
 		repo      = mocks.ReminderRepository{}
 		reminders = []domain.Reminder{
 			{
-				Subject:  strings.Split(`The first scheduled notification`, ` `),
+				What:     `The first scheduled notification`,
 				When:     time.Second,
 				NotifyAt: time.Date(1984, 8, 31, 0, 0, 0, 0, time.Local),
 			},
 			{
-				Subject:  strings.Split(`The second scheduled notification`, ` `),
+				What:     `The second scheduled notification`,
 				When:     time.Second,
 				NotifyAt: time.Date(2000, 12, 31, 23, 59, 59, 0, time.Local),
 			},
