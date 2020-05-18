@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"strings"
+	"time"
 
 	"github.com/sepuka/campaner/internal/speeches"
 
@@ -61,6 +62,8 @@ func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 		pattern = speeches.NewPattern([]string{list})
 		reminder.AppendSubject(pattern)
 	}
+
+	reminder.When = time.Second
 
 	return speech.ApplyPattern(pattern)
 }
