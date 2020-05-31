@@ -126,6 +126,7 @@ func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 	if value, err = strconv.ParseFloat(moment, 32); err != nil {
 		value = 1
 		dimension = moment
+		pattern, _ = speech.TryPattern(shortPatternLength)
 	}
 
 	timeFrame = domain.NewTimeFrame(value, dimension)
