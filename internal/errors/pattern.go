@@ -1,7 +1,7 @@
 package errors
 
 func NewPatternLengthIncorrect() error {
-	return calendarError{
+	return campanerError{
 		errorType: PatternLengthIncorrect,
 	}
 }

@@ -17,7 +17,7 @@ const (
 type ErrorType uint
 
 func GetType(err error) ErrorType {
-	if errType, ok := err.(calendarError); ok {
+	if errType, ok := err.(campanerError); ok {
 		return errType.errorType
 	}
 
