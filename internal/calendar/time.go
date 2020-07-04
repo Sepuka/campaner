@@ -93,6 +93,7 @@ func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 	const (
 		shortPatternLength = 2
 		fullPatternLength  = 3
+		momentBitSize      = 32
 	)
 	var (
 		value                          float64
@@ -123,7 +124,7 @@ func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 		return nil, errors.NewNotATimeError()
 	}
 
-	if value, err = strconv.ParseFloat(moment, 32); err != nil {
+	if value, err = strconv.ParseFloat(moment, momentBitSize); err != nil {
 		value = 1
 		dimension = moment
 		pattern, _ = speech.TryPattern(shortPatternLength)
@@ -134,7 +135,13 @@ func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 		return nil, errors.NewNotATimeError()
 	}
 
-	return NewDate(time.Now().Add(duration)), speech.ApplyPattern(pattern)
+	if err = speech.ApplyPattern(pattern); err != nil {
+		return nil, err
+	} else {
+		date = NewDate(time.Now().Add(duration))
+	}
+
+	return minutesTail(date, speech)
 }
 
 func onNextTimePeriod(date *Date, speech *speeches.Speech) (*Date, error) {
@@ -208,4 +215,38 @@ func onNextTimeHourPeriod(date *Date, speech *speeches.Speech) (*Date, error) {
 	}
 
 	return atTime, speech.ApplyPattern(pattern)
+}
+
+func minutesTail(date *Date, speech *speeches.Speech) (*Date, error) {
+	const (
+		patternLength = 2
+	)
+	var (
+		value              int64
+		err                error
+		minutes, dimension string
+		pattern            *speeches.Pattern
+	)
+
+	if pattern, err = speech.TryPattern(patternLength); err != nil {
+		return date, nil
+	}
+
+	if err = pattern.MakeOut(&minutes, &dimension); err != nil {
+		return date, nil
+	}
+
+	if value, err = strconv.ParseInt(minutes, 0, 0); err != nil {
+		return date, nil
+	}
+
+	if value < 0 || value > 59 {
+		return date, nil
+	}
+
+	if !strings.HasPrefix(dimension, `минут`) {
+		return date, nil
+	}
+
+	return date.Add(time.Minute * time.Duration(value)), speech.ApplyPattern(pattern)
 }

@@ -79,6 +79,12 @@ func TestOverTimeParser(t *testing.T) {
 				When: 90 * time.Minute,
 			},
 		},
+		`через 1 час 30 минут`: {
+			speech: speeches.NewSpeech(`через 1 час 30 минут действие`),
+			reminder: &domain.Reminder{
+				When: 90 * time.Minute,
+			},
+		},
 		`через 2 часа`: {
 			speech: speeches.NewSpeech(`через 2 часа действие`),
 			reminder: &domain.Reminder{
