@@ -78,7 +78,7 @@ func TestNewAnalyzer(t *testing.T) {
 			speech: `завтра в 09:23 отвести детей в школу`,
 			expectedReminder: &domain.Reminder{
 				Subject: strings.Split(`отвести детей в школу`, ` `),
-				When:    time.Until(calendar.NextMorning().Add(23 * time.Minute)),
+				When:    time.Until(calendar.NextMidnight().Add(9 * time.Hour).Add(23 * time.Minute)),
 			},
 		},
 		`через час хлеба и зрелищ`: {
