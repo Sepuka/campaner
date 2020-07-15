@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 
 	"github.com/sepuka/campaner/internal/speeches"
@@ -29,11 +30,11 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 	}
 }
 
-func (obj *Analyzer) Analyze(text string, reminder *domain.Reminder) {
-	obj.buildReminder(speeches.NewSpeech(text), reminder)
+func (a *Analyzer) Analyze(text string, reminder *domain.Reminder) {
+	a.buildReminder(speeches.NewSpeech(text), reminder)
 }
 
-func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder) {
+func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder) {
 	const patternLength = 1
 	var (
 		err     error
@@ -44,10 +45,14 @@ func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Rem
 		if reminder.GetSubject() == `` {
 			reminder.AppendSubject(speeches.NewPattern([]string{`ring!`}))
 		}
+		if reminder.IsTimeUnknown() {
+			var randomSubject = fmt.Sprintf(`Попробуйте фразу: ": %s"`, a.getRandomStatement())
+			reminder.RewriteSubject(randomSubject)
+		}
 		return
 	}
 
-	if parser, ok := obj.glossary[pattern.Origin()]; ok {
+	if parser, ok := a.glossary[pattern.Origin()]; ok {
 		if err = parser.Parse(speech, reminder); err != nil {
 			var (
 				patterns, what string
@@ -71,5 +76,17 @@ func (obj *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Rem
 		reminder.AppendSubject(pattern)
 	}
 
-	obj.buildReminder(speech, reminder)
+	a.buildReminder(speech, reminder)
+}
+
+func (a *Analyzer) getRandomStatement() string {
+	var statements = []string{
+		`через 30 минут позвонить другу`,
+		`завтра днем вынести мусор`,
+		`вечером сделать домашнюю работу`,
+	}
+
+	var rnd = rand.Intn(len(statements)) - 1
+
+	return statements[rnd]
 }

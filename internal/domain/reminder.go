@@ -77,6 +77,14 @@ func (r *Reminder) IsImmediate() bool {
 	return r.When < toShortTime
 }
 
+func (r *Reminder) IsTimeUnknown() bool {
+	return r.When == 0
+}
+
+func (r *Reminder) RewriteSubject(subject string) {
+	r.Subject = []string{subject}
+}
+
 func (r *Reminder) AppendSubject(pattern *speeches.Pattern) {
 	r.Subject = append(r.Subject, pattern.String())
 }

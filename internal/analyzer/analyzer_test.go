@@ -48,18 +48,6 @@ func TestNewAnalyzer(t *testing.T) {
 		speech           string
 		expectedReminder *domain.Reminder
 	}{
-		`empty rest when empty speech`: {
-			speech: ``,
-			expectedReminder: &domain.Reminder{
-				Subject: []string{`ring!`},
-			},
-		},
-		`unknown pattern`: {
-			speech: `abc`,
-			expectedReminder: &domain.Reminder{
-				Subject: []string{`abc`},
-			},
-		},
 		`напомни мне через 25 секунд что-то сделать`: {
 			speech: `напомни мне через 25 секунд что-то сделать`,
 			expectedReminder: &domain.Reminder{
@@ -244,4 +232,15 @@ func TestDateAnalyzer(t *testing.T) {
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
+}
+
+func TestUnknownTime(t *testing.T) {
+	var (
+		analyzer = NewAnalyzer(glossary)
+		reminder = &domain.Reminder{}
+	)
+
+	analyzer.Analyze(`abc def`, reminder)
+	assert.Equal(t, float64(0), reminder.When.Seconds())
+	assert.True(t, strings.HasPrefix(reminder.GetSubject(), `Попробуйте фразу:`))
 }
