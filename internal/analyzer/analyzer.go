@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/sepuka/campaner/internal/speeches"
 
@@ -46,8 +47,9 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 			reminder.AppendSubject(speeches.NewPattern([]string{`ring!`}))
 		}
 		if reminder.IsTimeUnknown() {
-			var randomSubject = fmt.Sprintf(`Попробуйте фразу: ": %s"`, a.getRandomStatement())
+			var randomSubject = fmt.Sprintf(`Попробуйте фразу: "%s"`, a.getRandomStatement(int64(reminder.Whom)))
 			reminder.RewriteSubject(randomSubject)
+			reminder.When = time.Second
 		}
 		return
 	}
@@ -79,14 +81,16 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 	a.buildReminder(speech, reminder)
 }
 
-func (a *Analyzer) getRandomStatement() string {
+func (a *Analyzer) getRandomStatement(seed int64) string {
+	rand.Seed(seed)
 	var statements = []string{
 		`через 30 минут позвонить другу`,
-		`завтра днем вынести мусор`,
+		`завтра вынести мусор`,
 		`вечером сделать домашнюю работу`,
+		`в субботу купить корм коту`,
 	}
 
-	var rnd = rand.Intn(len(statements)) - 1
+	var rnd = rand.Intn(len(statements) - 1)
 
 	return statements[rnd]
 }

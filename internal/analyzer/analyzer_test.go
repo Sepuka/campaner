@@ -241,6 +241,6 @@ func TestUnknownTime(t *testing.T) {
 	)
 
 	analyzer.Analyze(`abc def`, reminder)
-	assert.Equal(t, float64(0), reminder.When.Seconds())
+	assert.Equal(t, float64(1), reminder.When.Seconds())
 	assert.True(t, strings.HasPrefix(reminder.GetSubject(), `Попробуйте фразу:`))
 }
