@@ -47,7 +47,7 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 			reminder.AppendSubject(speeches.NewPattern([]string{`ring!`}))
 		}
 		if reminder.IsTimeUnknown() {
-			var randomSubject = fmt.Sprintf(`Попробуйте фразу: "%s"`, a.getRandomStatement(int64(reminder.Whom)))
+			var randomSubject = fmt.Sprintf(`Попробуйте фразу: "%s"`, a.getRandomStatement(time.Now().Unix()))
 			reminder.RewriteSubject(randomSubject)
 			reminder.When = time.Second
 		}
