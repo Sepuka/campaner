@@ -2,7 +2,7 @@ package bot
 
 import (
 	"github.com/sarulabs/di"
-	api3 "github.com/sepuka/campaner/internal/api"
+	"github.com/sepuka/campaner/internal/api/method"
 	"github.com/sepuka/campaner/internal/bot"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
@@ -25,7 +25,7 @@ func init() {
 				var (
 					repo   = ctx.Get(repository2.ReminderRepoDef).(domain.ReminderRepository)
 					logger = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
-					api    = ctx.Get(api2.SendMessageDef).(*api3.SendMessage)
+					api    = ctx.Get(api2.SendMessageDef).(*method.MessagesSend)
 				)
 
 				return bot.NewWorker(repo, logger, api), nil

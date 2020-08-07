@@ -1,64 +1,61 @@
-package api
+package method
 
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	url2 "net/url"
 	"strconv"
 	"strings"
 
-	"github.com/sepuka/campaner/internal/context"
+	"github.com/sepuka/campaner/internal/api/domain"
 
+	"github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/config"
 	"go.uber.org/zap"
 )
 
-const (
-	apiVersion  = `5.103`
-	apiEndpoint = `https://api.vk.com/method`
-	apiMethod   = `messages.send`
-)
-
 type (
-	SendMessage struct {
+	UsersGet struct {
 		cfg    *config.Config
 		client *http.Client
 		logger *zap.SugaredLogger
 	}
 )
 
-func NewSendMessage(
+func NewUsersGet(
 	cfg *config.Config,
 	client *http.Client,
 	logger *zap.SugaredLogger,
-) *SendMessage {
-	return &SendMessage{
+) *UsersGet {
+	return &UsersGet{
 		cfg:    cfg,
 		client: client,
 		logger: logger,
 	}
 }
 
-func (obj *SendMessage) Send(peerId int, text string) error {
+func (obj *UsersGet) Send(peerId int) (*domain.User, error) {
+	const (
+		apiMethod = `users.get`
+		fields    = `timezone`
+	)
 	var (
 		request      *http.Request
 		response     *http.Response
-		answer       = &context.Response{}
+		userResponse = &domain.UserResponse{}
 		dumpResponse []byte
 		err          error
 		params       = url2.Values{
-			`v`:            []string{apiVersion},
+			`v`:            []string{api.Version},
 			`access_token`: []string{obj.cfg.Api.Token},
-			`message`:      []string{text},
-			`peer_id`:      []string{strconv.Itoa(peerId)},
-			`random_id`:    []string{strconv.FormatInt(rand.Int63(), 10)},
+			`fields`:       []string{fields},
+			`user_id`:      []string{strconv.Itoa(peerId)},
 		}
 		maskedAccessToken = fmt.Sprintf(`%s...`, obj.cfg.Api.Token[0:3])
 		maskedParams      = strings.Replace(params.Encode(), obj.cfg.Api.Token, maskedAccessToken, 1)
-		endpoint          = fmt.Sprintf(`%s/%s?%s`, apiEndpoint, apiMethod, params.Encode())
+		endpoint          = fmt.Sprintf(`%s/%s?%s`, api.Endpoint, apiMethod, params.Encode())
 	)
 
 	if request, err = http.NewRequest(`POST`, endpoint, nil); err != nil {
@@ -70,9 +67,10 @@ func (obj *SendMessage) Send(peerId int, text string) error {
 			).
 			Errorf(`build api request error`)
 
-		return err
+		return nil, err
 	}
 
+	// TODO add an http short timeout
 	if response, err = obj.client.Do(request); err != nil {
 		obj.
 			logger.
@@ -82,7 +80,7 @@ func (obj *SendMessage) Send(peerId int, text string) error {
 			).
 			Errorf(`send api request error`)
 
-		return err
+		return nil, err
 	}
 
 	if dumpResponse, err = httputil.DumpResponse(response, true); err != nil {
@@ -94,7 +92,7 @@ func (obj *SendMessage) Send(peerId int, text string) error {
 			).
 			Errorf(`dump api response error`)
 
-		return err
+		return nil, err
 	}
 
 	obj.
@@ -105,7 +103,7 @@ func (obj *SendMessage) Send(peerId int, text string) error {
 		).
 		Debug(`api message was sent`)
 
-	if err = json.NewDecoder(response.Body).Decode(answer); err != nil {
+	if err = json.NewDecoder(response.Body).Decode(userResponse); err != nil {
 		obj.
 			logger.
 			With(
@@ -114,18 +112,8 @@ func (obj *SendMessage) Send(peerId int, text string) error {
 			).
 			Error(`error while decoding api response`)
 
-		return err
+		return nil, err
 	}
 
-	if len(answer.Error.Message) > 0 {
-		obj.
-			logger.
-			With(
-				zap.Int32(`code`, answer.Error.Code),
-				zap.String(`message`, answer.Error.Message),
-			).
-			Error(`failed api answer`)
-	}
-
-	return nil
+	return &userResponse.Response[0], nil
 }

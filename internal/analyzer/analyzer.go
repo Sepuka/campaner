@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sepuka/campaner/internal/context"
+
 	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/errors"
@@ -31,11 +33,11 @@ func NewAnalyzer(glossary Glossary) *Analyzer {
 	}
 }
 
-func (a *Analyzer) Analyze(text string, reminder *domain.Reminder) {
-	a.buildReminder(speeches.NewSpeech(text), reminder)
+func (a *Analyzer) Analyze(text string, reminder *domain.Reminder, reqCtx *context.Context) {
+	a.buildReminder(speeches.NewSpeech(text), reminder, reqCtx)
 }
 
-func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder) {
+func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder, reqCtx *context.Context) {
 	const patternLength = 1
 	var (
 		err     error
@@ -78,7 +80,7 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 		reminder.AppendSubject(pattern)
 	}
 
-	a.buildReminder(speech, reminder)
+	a.buildReminder(speech, reminder, reqCtx)
 }
 
 func (a *Analyzer) getRandomStatement(seed int64) string {

@@ -4,7 +4,7 @@ import (
 	http2 "net/http"
 
 	"github.com/sarulabs/di"
-	"github.com/sepuka/campaner/internal/api"
+	"github.com/sepuka/campaner/internal/api/method"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
 	"github.com/sepuka/campaner/internal/def/http"
@@ -13,19 +13,19 @@ import (
 )
 
 const (
-	SendMessageDef = `def.api.send_message`
+	UsersGetDef = `def.api.users_get`
 )
 
 func init() {
 	def.Register(func(builder *di.Builder, cfg *config.Config) error {
 		return builder.Add(di.Def{
-			Name: SendMessageDef,
+			Name: UsersGetDef,
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
 					client = ctx.Get(http.ClientDef).(*http2.Client)
 					logger = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
 				)
-				return api.NewSendMessage(cfg, client, logger), nil
+				return method.NewUsersGet(cfg, client, logger), nil
 			},
 		})
 	})

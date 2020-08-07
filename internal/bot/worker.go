@@ -6,9 +6,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sepuka/campaner/internal/api/method"
+
 	"github.com/go-pg/pg"
 
-	"github.com/sepuka/campaner/internal/api"
 	"go.uber.org/zap"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -16,14 +17,14 @@ import (
 
 type Worker struct {
 	repo   domain.ReminderRepository
-	api    *api.SendMessage
+	api    *method.MessagesSend
 	logger *zap.SugaredLogger
 }
 
 func NewWorker(
 	repo domain.ReminderRepository,
 	logger *zap.SugaredLogger,
-	api *api.SendMessage,
+	api *method.MessagesSend,
 ) *Worker {
 	return &Worker{
 		repo:   repo,

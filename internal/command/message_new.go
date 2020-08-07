@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	apiDomain "github.com/sepuka/campaner/internal/api/domain"
+
+	"github.com/sepuka/campaner/internal/api/method"
+
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -13,26 +17,28 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/sepuka/campaner/internal/api"
-
 	"github.com/sepuka/campaner/internal/context"
 )
 
 type MessageNew struct {
-	api          *api.SendMessage
+	api          *method.MessagesSend
+	apiUsersGet  *method.UsersGet
 	logger       *zap.SugaredLogger
 	analyzer     *analyzer.Analyzer
 	reminderRepo domain.ReminderRepository
 }
 
+// TODO: encapsulate API to one arg
 func NewMessageNew(
-	api *api.SendMessage,
+	api *method.MessagesSend,
+	apiUsersGet *method.UsersGet,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
 	repo domain.ReminderRepository,
 ) *MessageNew {
 	return &MessageNew{
 		api:          api,
+		apiUsersGet:  apiUsersGet,
 		logger:       logger,
 		analyzer:     analyzer,
 		reminderRepo: repo,
@@ -45,9 +51,19 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 		output   = []byte(`ok`)
 		text     = req.Object.Message.Text
 		reminder = domain.NewReminder(int(req.Object.Message.PeerId))
+		reqCtx   *context.Context
 	)
 
-	obj.analyzer.Analyze(text, reminder)
+	if reqCtx, err = obj.buildContext(req); err != nil {
+		obj.
+			logger.
+			With(
+				zap.Error(err),
+			).
+			Error(`build context error`)
+	}
+
+	obj.analyzer.Analyze(text, reminder, reqCtx)
 	if err = obj.reminderRepo.Add(reminder); err != nil {
 		obj.
 			logger.
@@ -97,6 +113,27 @@ func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 			).
 			Error(`send api message error (confirmation)`)
 	}
+}
+
+func (obj *MessageNew) buildContext(req *context.Request) (*context.Context, error) {
+	var (
+		err    error
+		userId = int(req.Object.Message.PeerId)
+		user   *apiDomain.User
+	)
+
+	if user, err = obj.apiUsersGet.Send(userId); err != nil {
+		obj.
+			logger.
+			With(
+				zap.Error(err),
+			).
+			Error(`send api message error (users.get)`)
+	}
+
+	return &context.Context{
+		User: &context.User{Timezone: user.TimeZone},
+	}, nil
 }
 
 func (obj *MessageNew) Precept() []string {
