@@ -4,6 +4,10 @@
 version: 2
 jobs:
   build:
+    filters:
+      branches:
+        only:
+          - master
     docker:
       - image: circleci/golang:1.11
 
