@@ -3,7 +3,7 @@ package command
 import (
 	"github.com/sarulabs/di"
 	analyzer3 "github.com/sepuka/campaner/internal/analyzer"
-	api3 "github.com/sepuka/campaner/internal/api"
+	"github.com/sepuka/campaner/internal/api/method"
 	"github.com/sepuka/campaner/internal/command"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
@@ -31,7 +31,7 @@ func init() {
 			},
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
-					api      = ctx.Get(api2.SendMessageDef).(*api3.SendMessage)
+					api      = ctx.Get(api2.SendMessageDef).(*method.SendMessage)
 					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
 					analyzer = ctx.Get(analyzer2.AnalyzerDef).(*analyzer3.Analyzer)
 					repo     = ctx.Get(repository.ReminderRepoDef).(domain.ReminderRepository)

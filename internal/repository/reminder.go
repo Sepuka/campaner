@@ -80,3 +80,28 @@ func (r *ReminderRepository) Scheduled(userId int, limit uint32) ([]domain.Remin
 
 	return models, err
 }
+
+func (r *ReminderRepository) Cancel(taskId int64, userId int) error {
+	var (
+		model = &domain.Reminder{
+			ReminderId: int(taskId),
+		}
+		err error
+	)
+
+	err = r.
+		db.
+		Model(model).
+		Where(`reminder_id = ? AND user_id = ? AND status = ?`, taskId, userId, domain.StatusNew).
+		Select()
+
+	if err != nil {
+		return err
+	}
+
+	model.Status = domain.StatusCanceled
+
+	return r.
+		db.
+		Update(model)
+}

@@ -1,10 +1,17 @@
 package analyzer
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/sepuka/campaner/internal/context"
+
+	domain2 "github.com/sepuka/campaner/internal/api/domain"
+	"go.uber.org/zap"
 
 	"github.com/sepuka/campaner/internal/speeches"
 
@@ -22,17 +29,82 @@ type Parser interface {
 type Glossary map[string]Parser
 
 type Analyzer struct {
-	glossary Glossary
+	glossary    Glossary
+	logger      *zap.SugaredLogger
+	taskManager domain.TaskManager
 }
 
-func NewAnalyzer(glossary Glossary) *Analyzer {
+func NewAnalyzer(glossary Glossary, logger *zap.SugaredLogger, taskManager domain.TaskManager) *Analyzer {
 	return &Analyzer{
-		glossary: glossary,
+		glossary:    glossary,
+		logger:      logger,
+		taskManager: taskManager,
 	}
 }
 
-func (a *Analyzer) Analyze(text string, reminder *domain.Reminder) {
+func (a *Analyzer) Analyze(msg context.Message, reminder *domain.Reminder) {
+	var (
+		text    = msg.Text
+		payload = msg.Payload
+	)
+
+	if payload != `` {
+		a.analyzePayload(msg, reminder)
+	} else {
+		a.analyzeText(text, reminder)
+	}
+}
+
+func (a *Analyzer) analyzeText(text string, reminder *domain.Reminder) {
 	a.buildReminder(speeches.NewSpeech(text), reminder)
+}
+
+func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder) {
+	var (
+		payload    domain2.ButtonPayload
+		err        error
+		taskId     int64
+		rawPayload = msg.Payload
+		text       = domain2.ButtonText(msg.Text)
+	)
+
+	if err = json.Unmarshal([]byte(rawPayload), &payload); err != nil {
+		a.logger.
+			With(
+				zap.String(`payload`, rawPayload),
+				zap.Error(err),
+			).
+			Error(`analyze payload error`)
+		return
+	}
+
+	if taskId, err = strconv.ParseInt(payload.Button, 10, 64); err != nil {
+		a.
+			logger.
+			With(
+				zap.String(`json`, rawPayload),
+				zap.Int(`user_id`, reminder.Whom),
+				zap.Error(err),
+			).
+			Error(`cannot parse task_id`)
+		return
+	}
+
+	if text == domain2.CancelButton {
+		if err = a.taskManager.Cancel(taskId, reminder.Whom); err != nil {
+			a.
+				logger.
+				With(
+					zap.Int64(`task_id`, taskId),
+					zap.Int(`user_id`, reminder.Whom),
+					zap.Error(err),
+				).
+				Error(`cannot cancel task`)
+			return
+		}
+		reminder.Subject = []string{`напоминание отменено`}
+		reminder.When = time.Nanosecond
+	}
 }
 
 func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Reminder) {

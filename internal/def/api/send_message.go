@@ -3,8 +3,9 @@ package api
 import (
 	http2 "net/http"
 
+	"github.com/sepuka/campaner/internal/api/method"
+
 	"github.com/sarulabs/di"
-	"github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
 	"github.com/sepuka/campaner/internal/def/http"
@@ -25,7 +26,7 @@ func init() {
 					client = ctx.Get(http.ClientDef).(*http2.Client)
 					logger = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
 				)
-				return api.NewSendMessage(cfg, client, logger), nil
+				return method.NewSendMessage(cfg, client, logger), nil
 			},
 		})
 	})

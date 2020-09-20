@@ -1,4 +1,4 @@
-package api
+package method
 
 import (
 	"encoding/json"
@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	url2 "net/url"
-	"strconv"
 	"strings"
+
+	"github.com/google/go-querystring/query"
+	"github.com/sepuka/campaner/internal/api"
+	"github.com/sepuka/campaner/internal/api/domain"
 
 	"github.com/sepuka/campaner/internal/context"
 
@@ -17,9 +20,7 @@ import (
 )
 
 const (
-	apiVersion  = `5.103`
-	apiEndpoint = `https://api.vk.com/method`
-	apiMethod   = `messages.send`
+	apiMethod = `messages.send`
 )
 
 type (
@@ -42,24 +43,97 @@ func NewSendMessage(
 	}
 }
 
-func (obj *SendMessage) Send(peerId int, text string) error {
+func (obj *SendMessage) SendIntention(peerId int, text string, cancelId int) error {
+	var (
+		err      error
+		params   url2.Values
+		keyboard = domain.Keyboard{
+			OneTime: true,
+			Buttons: [][]domain.Button{
+				{
+					{
+						Color: `negative`,
+						Action: domain.Action{
+							Type:    domain.TextButtonType,
+							Label:   domain.CancelButton,
+							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, cancelId)}.String(),
+						},
+					},
+				},
+			},
+		}
+
+		payload = domain.MessagesSend{
+			Message:     text,
+			AccessToken: obj.cfg.Api.Token,
+			ApiVersion:  api.Version,
+			PeerId:      peerId,
+			RandomId:    rand.Int63(),
+		}
+
+		maskedAccessToken = fmt.Sprintf(`%s...`, obj.cfg.Api.Token[0:3])
+		maskedParams      = strings.Replace(params.Encode(), obj.cfg.Api.Token, maskedAccessToken, 1)
+		js                []byte
+	)
+
+	if js, err = json.Marshal(keyboard); err != nil {
+		obj.
+			logger.
+			With(
+				zap.String(`request`, maskedParams),
+				zap.Error(err),
+			).
+			Errorf(`build keyboard query string error`)
+
+		return err
+	}
+
+	payload.Keyboard = string(js)
+
+	return obj.send(payload)
+}
+
+func (obj *SendMessage) SendNotification(peerId int, text string) error {
+	var (
+		payload = domain.MessagesSend{
+			Message:     text,
+			AccessToken: obj.cfg.Api.Token,
+			ApiVersion:  api.Version,
+			PeerId:      peerId,
+			RandomId:    rand.Int63(),
+		}
+	)
+
+	return obj.send(payload)
+}
+
+func (obj *SendMessage) send(queryArgs domain.MessagesSend) error {
 	var (
 		request      *http.Request
 		response     *http.Response
 		answer       = &context.Response{}
 		dumpResponse []byte
 		err          error
-		params       = url2.Values{
-			`v`:            []string{apiVersion},
-			`access_token`: []string{obj.cfg.Api.Token},
-			`message`:      []string{text},
-			`peer_id`:      []string{strconv.Itoa(peerId)},
-			`random_id`:    []string{strconv.FormatInt(rand.Int63(), 10)},
-		}
+		params       url2.Values
+
 		maskedAccessToken = fmt.Sprintf(`%s...`, obj.cfg.Api.Token[0:3])
 		maskedParams      = strings.Replace(params.Encode(), obj.cfg.Api.Token, maskedAccessToken, 1)
-		endpoint          = fmt.Sprintf(`%s/%s?%s`, apiEndpoint, apiMethod, params.Encode())
+		endpoint          string
 	)
+
+	if params, err = query.Values(queryArgs); err != nil {
+		obj.
+			logger.
+			With(
+				zap.String(`request`, maskedParams),
+				zap.Error(err),
+			).
+			Errorf(`build request query string error`)
+
+		return err
+	}
+
+	endpoint = fmt.Sprintf(`%s/%s?%s`, api.Endpoint, apiMethod, params.Encode())
 
 	if request, err = http.NewRequest(`POST`, endpoint, nil); err != nil {
 		obj.

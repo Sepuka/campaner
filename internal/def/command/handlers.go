@@ -9,7 +9,7 @@ import (
 
 const (
 	HandlerMapDef = `handler.map.def`
-	ExecutorDef   = `hosting.command.tag`
+	ExecutorDef   = `handler.command.def`
 )
 
 func init() {

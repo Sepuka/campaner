@@ -5,6 +5,10 @@ import (
 	"github.com/sepuka/campaner/internal/analyzer"
 	"github.com/sepuka/campaner/internal/config"
 	"github.com/sepuka/campaner/internal/def"
+	"github.com/sepuka/campaner/internal/def/log"
+	"github.com/sepuka/campaner/internal/def/repository"
+	"github.com/sepuka/campaner/internal/domain"
+	"go.uber.org/zap"
 )
 
 const (
@@ -21,6 +25,8 @@ func init() {
 					parsers  = def.GetByTag(ParserTagDef)
 					glossary = make(analyzer.Glossary)
 					keyword  string
+					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
+					repo     = ctx.Get(repository.ReminderRepoDef).(domain.TaskManager)
 				)
 
 				for _, parser := range parsers {
@@ -29,7 +35,7 @@ func init() {
 					}
 				}
 
-				return analyzer.NewAnalyzer(glossary), nil
+				return analyzer.NewAnalyzer(glossary, logger, repo), nil
 			},
 		})
 	})

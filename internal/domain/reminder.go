@@ -20,6 +20,7 @@ const (
 	StatusNew = iota
 	StatusSuccess
 	StatusFailed
+	StatusCanceled
 )
 
 type (
@@ -29,6 +30,10 @@ type (
 		SetStatus(*Reminder, *pg.Tx) (pg.Result, error)
 		Commit(*pg.Tx) error
 		Scheduled(userId int, limit uint32) ([]Reminder, error)
+	}
+
+	TaskManager interface {
+		Cancel(taskId int64, userId int) error
 	}
 
 	Reminder struct {

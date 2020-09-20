@@ -13,6 +13,7 @@ type Message struct {
 	RandomId              int32 `json:"random_id"`
 	Attachments           []int
 	IsHidden              bool
+	Payload               string
 }
 
 type ClientInfo struct {

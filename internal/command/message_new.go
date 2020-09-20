@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sepuka/campaner/internal/api/method"
+
 	"github.com/sepuka/campaner/internal/domain"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -13,20 +15,18 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/sepuka/campaner/internal/api"
-
 	"github.com/sepuka/campaner/internal/context"
 )
 
 type MessageNew struct {
-	api          *api.SendMessage
+	api          *method.SendMessage
 	logger       *zap.SugaredLogger
 	analyzer     *analyzer.Analyzer
 	reminderRepo domain.ReminderRepository
 }
 
 func NewMessageNew(
-	api *api.SendMessage,
+	api *method.SendMessage,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
 	repo domain.ReminderRepository,
@@ -43,11 +43,12 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	var (
 		err      error
 		output   = []byte(`ok`)
-		text     = req.Object.Message.Text
 		reminder = domain.NewReminder(int(req.Object.Message.PeerId))
+		msg      = req.Object.Message
 	)
 
-	obj.analyzer.Analyze(text, reminder)
+	obj.analyzer.Analyze(msg, reminder)
+
 	if err = obj.reminderRepo.Add(reminder); err != nil {
 		obj.
 			logger.
@@ -58,7 +59,7 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	}
 
 	if !reminder.IsImmediate() {
-		go obj.confirmMsg(reminder.When, reminder.Whom)
+		go obj.confirmMsg(reminder)
 	}
 
 	_, err = resp.Write(output)
@@ -66,10 +67,12 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	return err
 }
 
-func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
+func (obj *MessageNew) confirmMsg(reminder *domain.Reminder) {
 	var (
-		err  error
-		text string
+		err   error
+		text  string
+		delay = reminder.When
+		whom  = reminder.Whom
 
 		notificationTime  = time.Now().Add(delay)
 		todayMidnight     = calendar.NextMidnight()
@@ -88,7 +91,7 @@ func (obj *MessageNew) confirmMsg(delay time.Duration, whom int) {
 		text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
 	}
 
-	if err = obj.api.Send(whom, text); err != nil {
+	if err = obj.api.SendIntention(whom, text, reminder.ReminderId); err != nil {
 		obj.
 			logger.
 			With(

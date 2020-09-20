@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/repository/mocks"
+	"go.uber.org/zap"
+
 	"github.com/sepuka/campaner/internal/calendar"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -42,7 +45,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewAnalyzer(t *testing.T) {
-	analyzer := NewAnalyzer(glossary)
+	var (
+		repo   = mocks.TaskManager{}
+		logger = zap.NewNop().Sugar()
+	)
+	analyzer := NewAnalyzer(glossary, logger, repo)
 
 	var testCases = map[string]struct {
 		speech           string
@@ -119,14 +126,18 @@ func TestNewAnalyzer(t *testing.T) {
 			expectedReminder = testCase.expectedReminder
 			actualReminder   = domain.NewReminder(0)
 		)
-		analyzer.Analyze(testCase.speech, actualReminder)
+		analyzer.analyzeText(testCase.speech, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
 }
 
 func TestDayOfWeekAnalyzer(t *testing.T) {
-	analyzer := NewAnalyzer(glossary)
+	var (
+		repo   = mocks.TaskManager{}
+		logger = zap.NewNop().Sugar()
+	)
+	analyzer := NewAnalyzer(glossary, logger, repo)
 	var testCases = map[string]struct {
 		words    string
 		reminder *domain.Reminder
@@ -195,7 +206,7 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 			expectedReminder = testCase.reminder
 			actualReminder   = &domain.Reminder{}
 		)
-		analyzer.Analyze(testCase.words, actualReminder)
+		analyzer.analyzeText(testCase.words, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
@@ -203,7 +214,9 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 
 func TestDateAnalyzer(t *testing.T) {
 	var (
-		analyzer       = NewAnalyzer(glossary)
+		repo           = mocks.TaskManager{}
+		logger         = zap.NewNop().Sugar()
+		analyzer       = NewAnalyzer(glossary, logger, repo)
 		now            = time.Now()
 		futureMidnight = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Add(calendar.Day * 3)
 		futureMoment   = fmt.Sprintf(`%s в 18:00 собрание`, futureMidnight.Format(calendar.DayMonthFormat))
@@ -228,7 +241,7 @@ func TestDateAnalyzer(t *testing.T) {
 			expectedReminder = testCase.reminder
 			actualReminder   = &domain.Reminder{}
 		)
-		analyzer.Analyze(testCase.words, actualReminder)
+		analyzer.analyzeText(testCase.words, actualReminder)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}
@@ -236,11 +249,13 @@ func TestDateAnalyzer(t *testing.T) {
 
 func TestUnknownTime(t *testing.T) {
 	var (
-		analyzer = NewAnalyzer(glossary)
+		repo     = mocks.TaskManager{}
+		logger   = zap.NewNop().Sugar()
+		analyzer = NewAnalyzer(glossary, logger, repo)
 		reminder = &domain.Reminder{}
 	)
 
-	analyzer.Analyze(`abc def`, reminder)
+	analyzer.analyzeText(`abc def`, reminder)
 	assert.Equal(t, float64(1), reminder.When.Seconds())
 	assert.True(t, strings.HasPrefix(reminder.GetSubject(), `Попробуйте фразу:`))
 }

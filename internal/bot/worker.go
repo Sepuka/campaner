@@ -6,9 +6,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sepuka/campaner/internal/api/method"
+
 	"github.com/go-pg/pg"
 
-	"github.com/sepuka/campaner/internal/api"
 	"go.uber.org/zap"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -16,14 +17,14 @@ import (
 
 type Worker struct {
 	repo   domain.ReminderRepository
-	api    *api.SendMessage
+	api    *method.SendMessage
 	logger *zap.SugaredLogger
 }
 
 func NewWorker(
 	repo domain.ReminderRepository,
 	logger *zap.SugaredLogger,
-	api *api.SendMessage,
+	api *method.SendMessage,
 ) *Worker {
 	return &Worker{
 		repo:   repo,
@@ -97,7 +98,7 @@ func (w *Worker) remind(reminder *domain.Reminder, tx *pg.Tx) {
 		status = domain.StatusSuccess
 	)
 
-	if err = w.api.Send(reminder.Whom, reminder.What); err != nil {
+	if err = w.api.SendNotification(reminder.Whom, reminder.What); err != nil {
 		status = domain.StatusFailed
 		w.
 			logger.
