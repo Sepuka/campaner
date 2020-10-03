@@ -22,3 +22,17 @@ func (_m TaskManager) Cancel(taskId int64, userId int) error {
 
 	return r0
 }
+
+// Prolong provides a mock function with given fields: taskId, userId, minutes
+func (_m TaskManager) Prolong(taskId int64, userId int, minutes int) error {
+	ret := _m.Called(taskId, userId, minutes)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int64, int, int) error); ok {
+		r0 = rf(taskId, userId, minutes)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

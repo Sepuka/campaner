@@ -9,6 +9,8 @@ import (
 	url2 "net/url"
 	"strings"
 
+	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
+
 	"github.com/google/go-querystring/query"
 	"github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/api/domain"
@@ -25,21 +27,24 @@ const (
 
 type (
 	SendMessage struct {
-		cfg    *config.Config
-		client *http.Client
-		logger *zap.SugaredLogger
+		cfg           *config.Config
+		client        api.HTTPClient
+		logger        *zap.SugaredLogger
+		featureToggle featureDomain.FeatureToggle
 	}
 )
 
 func NewSendMessage(
 	cfg *config.Config,
-	client *http.Client,
+	client api.HTTPClient,
 	logger *zap.SugaredLogger,
+	feature featureDomain.FeatureToggle,
 ) *SendMessage {
 	return &SendMessage{
-		cfg:    cfg,
-		client: client,
-		logger: logger,
+		cfg:           cfg,
+		client:        client,
+		logger:        logger,
+		featureToggle: feature,
 	}
 }
 
@@ -93,7 +98,7 @@ func (obj *SendMessage) SendIntention(peerId int, text string, cancelId int) err
 	return obj.send(payload)
 }
 
-func (obj *SendMessage) SendNotification(peerId int, text string) error {
+func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) error {
 	var (
 		payload = domain.MessagesSend{
 			Message:     text,
@@ -102,7 +107,40 @@ func (obj *SendMessage) SendNotification(peerId int, text string) error {
 			PeerId:      peerId,
 			RandomId:    rand.Int63(),
 		}
+		err      error
+		js       []byte
+		keyboard = domain.Keyboard{
+			OneTime: true,
+			Buttons: [][]domain.Button{
+				{
+					{
+						Color: `positive`,
+						Action: domain.Action{
+							Type:    domain.TextButtonType,
+							Label:   domain.Later15MinButton,
+							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, remindId)}.String(),
+						},
+					},
+				},
+			},
+		}
 	)
+
+	if obj.featureToggle.IsEnabled(peerId, featureDomain.Postpone) {
+		if js, err = json.Marshal(keyboard); err != nil {
+			obj.
+				logger.
+				With(
+					zap.Any(`request`, keyboard),
+					zap.Error(err),
+				).
+				Errorf(`build keyboard query string error`)
+
+			return err
+		}
+
+		payload.Keyboard = string(js)
+	}
 
 	return obj.send(payload)
 }
@@ -115,10 +153,8 @@ func (obj *SendMessage) send(queryArgs domain.MessagesSend) error {
 		dumpResponse []byte
 		err          error
 		params       url2.Values
-
-		maskedAccessToken = fmt.Sprintf(`%s...`, obj.cfg.Api.Token[0:3])
-		maskedParams      = strings.Replace(params.Encode(), obj.cfg.Api.Token, maskedAccessToken, 1)
-		endpoint          string
+		maskedParams = obj.cfg.Api.MaskedToken(params.Encode())
+		endpoint     string
 	)
 
 	if params, err = query.Values(queryArgs); err != nil {

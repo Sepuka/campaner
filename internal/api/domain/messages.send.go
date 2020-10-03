@@ -3,8 +3,10 @@ package domain
 type ButtonText string
 
 const (
-	TextButtonType ButtonType = `text`
-	CancelButton   ButtonText = `cancel`
+	TextButtonType   ButtonType = `text`
+	CancelButton     ButtonText = `cancel`
+	Later15MinButton ButtonText = `15 minutes`
+	Later30MinButton ButtonText = `30 minutes`
 )
 
 type (

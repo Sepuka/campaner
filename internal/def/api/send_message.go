@@ -3,6 +3,9 @@ package api
 import (
 	http2 "net/http"
 
+	"github.com/sepuka/campaner/internal/def/feature_toggling"
+	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
+
 	"github.com/sepuka/campaner/internal/api/method"
 
 	"github.com/sarulabs/di"
@@ -23,10 +26,11 @@ func init() {
 			Name: SendMessageDef,
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
-					client = ctx.Get(http.ClientDef).(*http2.Client)
-					logger = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
+					client        = ctx.Get(http.ClientDef).(*http2.Client)
+					logger        = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
+					featureToggle = ctx.Get(feature_toggling.FeatureToggleDef).(featureDomain.FeatureToggle)
 				)
-				return method.NewSendMessage(cfg, client, logger), nil
+				return method.NewSendMessage(cfg, client, logger, featureToggle), nil
 			},
 		})
 	})

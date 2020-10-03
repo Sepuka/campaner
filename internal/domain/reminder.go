@@ -34,6 +34,7 @@ type (
 
 	TaskManager interface {
 		Cancel(taskId int64, userId int) error
+		Prolong(taskId int64, userId int, minutes int) error
 	}
 
 	Reminder struct {

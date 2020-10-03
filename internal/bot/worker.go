@@ -98,7 +98,7 @@ func (w *Worker) remind(reminder *domain.Reminder, tx *pg.Tx) {
 		status = domain.StatusSuccess
 	)
 
-	if err = w.api.SendNotification(reminder.Whom, reminder.What); err != nil {
+	if err = w.api.SendNotification(reminder.Whom, reminder.What, reminder.ReminderId); err != nil {
 		status = domain.StatusFailed
 		w.
 			logger.

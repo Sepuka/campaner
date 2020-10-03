@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
+
 	"github.com/sepuka/campaner/internal/context"
 
 	domain2 "github.com/sepuka/campaner/internal/api/domain"
@@ -29,16 +31,18 @@ type Parser interface {
 type Glossary map[string]Parser
 
 type Analyzer struct {
-	glossary    Glossary
-	logger      *zap.SugaredLogger
-	taskManager domain.TaskManager
+	glossary      Glossary
+	logger        *zap.SugaredLogger
+	taskManager   domain.TaskManager
+	featureToggle featureDomain.FeatureToggle
 }
 
-func NewAnalyzer(glossary Glossary, logger *zap.SugaredLogger, taskManager domain.TaskManager) *Analyzer {
+func NewAnalyzer(glossary Glossary, logger *zap.SugaredLogger, taskManager domain.TaskManager, feature featureDomain.FeatureToggle) *Analyzer {
 	return &Analyzer{
-		glossary:    glossary,
-		logger:      logger,
-		taskManager: taskManager,
+		glossary:      glossary,
+		logger:        logger,
+		taskManager:   taskManager,
+		featureToggle: feature,
 	}
 }
 
@@ -90,7 +94,8 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 		return
 	}
 
-	if text == domain2.CancelButton {
+	switch text {
+	case domain2.CancelButton:
 		if err = a.taskManager.Cancel(taskId, reminder.Whom); err != nil {
 			a.
 				logger.
@@ -103,6 +108,31 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 			return
 		}
 		reminder.Subject = []string{`напоминание отменено`}
+		reminder.When = time.Nanosecond
+	case domain2.Later15MinButton:
+	case domain2.Later30MinButton:
+		if !a.featureToggle.IsEnabled(reminder.Whom, featureDomain.Postpone) {
+			return
+		}
+		var minutes int
+		switch text {
+		case domain2.Later15MinButton:
+			minutes = 15
+		default:
+			minutes = 30
+		}
+		if err = a.taskManager.Prolong(taskId, reminder.Whom, minutes); err != nil {
+			a.
+				logger.
+				With(
+					zap.Int64(`task_id`, taskId),
+					zap.Int(`user_id`, reminder.Whom),
+					zap.Error(err),
+				).
+				Error(`cannot prolong task`)
+			return
+		}
+		reminder.Subject = []string{`напоминание продлено`}
 		reminder.When = time.Nanosecond
 	}
 }

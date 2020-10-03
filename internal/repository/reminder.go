@@ -105,3 +105,29 @@ func (r *ReminderRepository) Cancel(taskId int64, userId int) error {
 		db.
 		Update(model)
 }
+
+func (r *ReminderRepository) Prolong(taskId int64, userId int, minutes int) error {
+	var (
+		model = &domain.Reminder{
+			ReminderId: int(taskId),
+			Whom:       userId,
+			Status:     domain.StatusSuccess,
+		}
+		err error
+	)
+
+	err = r.
+		db.
+		Model(model).
+		Select()
+	if err != nil {
+		return err
+	}
+
+	model.When += time.Duration(minutes) * time.Minute
+	model.Status = domain.StatusNew
+
+	return r.
+		db.
+		Update(model)
+}
