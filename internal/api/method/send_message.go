@@ -213,7 +213,7 @@ func (obj *SendMessage) send(queryArgs domain.MessagesSend) error {
 			zap.String(`request`, maskedParams),
 			zap.ByteString(`response`, dumpResponse),
 		).
-		Debug(`api message was sent`)
+		Info(`api message sent`)
 
 	if err = json.NewDecoder(response.Body).Decode(answer); err != nil {
 		obj.
