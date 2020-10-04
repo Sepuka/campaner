@@ -145,7 +145,7 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 	return obj.send(payload)
 }
 
-func (obj *SendMessage) send(queryArgs domain.MessagesSend) error {
+func (obj *SendMessage) send(msgStruct domain.MessagesSend) error {
 	var (
 		request      *http.Request
 		response     *http.Response
@@ -153,23 +153,21 @@ func (obj *SendMessage) send(queryArgs domain.MessagesSend) error {
 		dumpResponse []byte
 		err          error
 		params       url2.Values
-		maskedParams = obj.cfg.Api.MaskedToken(params.Encode())
+		maskedParams string
 		endpoint     string
 	)
 
-	if params, err = query.Values(queryArgs); err != nil {
+	if params, err = query.Values(msgStruct); err != nil {
 		obj.
 			logger.
-			With(
-				zap.String(`request`, maskedParams),
-				zap.Error(err),
-			).
+			With(zap.Error(err)).
 			Errorf(`build request query string error`)
 
 		return err
 	}
 
 	endpoint = fmt.Sprintf(`%s/%s?%s`, api.Endpoint, apiMethod, params.Encode())
+	maskedParams = obj.cfg.Api.MaskedToken(endpoint)
 
 	if request, err = http.NewRequest(`POST`, endpoint, nil); err != nil {
 		obj.
