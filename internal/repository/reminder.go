@@ -124,7 +124,7 @@ func (r *ReminderRepository) Prolong(taskId int64, userId int, minutes int) erro
 		return err
 	}
 
-	model.When += time.Duration(minutes) * time.Minute
+	model.When = time.Duration(minutes) * time.Minute
 	model.Status = domain.StatusNew
 
 	return r.
