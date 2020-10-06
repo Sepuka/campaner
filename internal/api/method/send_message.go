@@ -9,11 +9,10 @@ import (
 	url2 "net/url"
 	"strings"
 
-	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
-
 	"github.com/google/go-querystring/query"
 	"github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/api/domain"
+	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
 
 	"github.com/sepuka/campaner/internal/context"
 
@@ -105,7 +104,7 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 			AccessToken: obj.cfg.Api.Token,
 			ApiVersion:  api.Version,
 			PeerId:      peerId,
-			RandomId:    rand.Int63(),
+			RandomId:    api.Rnd(),
 		}
 		err      error
 		js       []byte
