@@ -119,6 +119,7 @@ func (r *ReminderRepository) Prolong(taskId int64, userId int, minutes int) erro
 	err = r.
 		db.
 		Model(model).
+		WherePK().
 		Select()
 	if err != nil {
 		return err

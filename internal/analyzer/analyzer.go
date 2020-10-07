@@ -110,7 +110,6 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 		reminder.Subject = []string{`напоминание отменено`}
 		reminder.When = time.Nanosecond
 	case domain2.Later15MinButton:
-	case domain2.Later30MinButton:
 		if !a.featureToggle.IsEnabled(reminder.Whom, featureDomain.Postpone) {
 			return
 		}
