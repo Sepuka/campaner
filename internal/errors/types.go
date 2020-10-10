@@ -8,10 +8,11 @@ const (
 	NotATimeError
 	InvalidTimeError
 
-	SpeechIsEmptyError
 	SpeechIsOverError
 
 	PatternLengthIncorrect
+	InvalidSpeechPayload
+	Storage
 )
 
 type ErrorType uint

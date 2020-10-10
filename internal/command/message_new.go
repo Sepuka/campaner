@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sepuka/campaner/internal/api"
+
 	"github.com/sepuka/campaner/internal/api/method"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -42,12 +44,17 @@ func NewMessageNew(
 func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) error {
 	var (
 		err      error
-		output   = []byte(`ok`)
 		reminder = domain.NewReminder(int(req.Object.Message.PeerId))
 		msg      = req.Object.Message
 	)
 
-	obj.analyzer.Analyze(msg, reminder)
+	if _, err = resp.Write(api.Response()); err != nil {
+		return err
+	}
+
+	if err = obj.analyzer.Analyze(msg, reminder); err != nil {
+		return err
+	}
 
 	if err = obj.reminderRepo.Add(reminder); err != nil {
 		obj.
@@ -61,8 +68,6 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	if !reminder.IsImmediate() {
 		go obj.confirmMsg(reminder)
 	}
-
-	_, err = resp.Write(output)
 
 	return err
 }

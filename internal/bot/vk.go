@@ -60,6 +60,10 @@ func (obj *Bot) Listen() error {
 		return err
 	}
 
+	if err := os.Chmod(socket, 0775); err != nil {
+		return err
+	}
+
 	defer func() error {
 		return os.Remove(socket)
 	}()

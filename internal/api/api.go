@@ -15,6 +15,10 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+func Response() []byte {
+	return []byte(`ok`)
+}
+
 func Rnd() int64 {
 	rand.Seed(time.Now().UnixNano())
 

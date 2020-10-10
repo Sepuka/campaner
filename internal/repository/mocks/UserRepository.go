@@ -13,7 +13,7 @@ type UserRepository struct {
 }
 
 // Get provides a mock function with given fields: userId
-func (_m *UserRepository) Get(userId int) (*domain.User, error) {
+func (_m UserRepository) Get(userId int) (*domain.User, error) {
 	ret := _m.Called(userId)
 
 	var r0 *domain.User

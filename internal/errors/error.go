@@ -14,7 +14,11 @@ type campanerError struct {
 }
 
 func (e campanerError) Error() string {
-	return e.originalError.Error()
+	if e.originalError != nil {
+		return e.originalError.Error()
+	}
+
+	return fmt.Sprintf(`error code %d`, e.errorType)
 }
 
 func (e campanerError) New(msg string) error {

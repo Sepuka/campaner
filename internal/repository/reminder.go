@@ -3,6 +3,8 @@ package repository
 import (
 	"time"
 
+	"github.com/sepuka/campaner/internal/errors"
+
 	"github.com/go-pg/pg"
 	"github.com/sepuka/campaner/internal/domain"
 )
@@ -106,29 +108,33 @@ func (r *ReminderRepository) Cancel(taskId int64, userId int) error {
 		Update(model)
 }
 
-func (r *ReminderRepository) Prolong(taskId int64, userId int, minutes int) error {
+func (r *ReminderRepository) Copy(taskId int64, reminder *domain.Reminder, minutes int) error {
 	var (
-		model = &domain.Reminder{
+		executedReminder = &domain.Reminder{
 			ReminderId: int(taskId),
-			Whom:       userId,
-			Status:     domain.StatusSuccess,
 		}
 		err error
 	)
 
 	err = r.
 		db.
-		Model(model).
+		Model(executedReminder).
 		WherePK().
 		Select()
 	if err != nil {
 		return err
 	}
 
-	model.When = time.Duration(minutes) * time.Minute
-	model.Status = domain.StatusNew
+	if executedReminder.Whom != reminder.Whom {
+		return errors.NewTaskManagerError(`wrong user id`)
+	}
 
-	return r.
-		db.
-		Update(model)
+	if executedReminder.Status != domain.StatusSuccess {
+		return errors.NewTaskManagerError(`wrong status`)
+	}
+
+	reminder.When = time.Duration(minutes) * time.Minute
+	reminder.RewriteSubject(executedReminder.What)
+
+	return nil
 }
