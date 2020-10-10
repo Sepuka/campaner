@@ -3,7 +3,6 @@ package analyzer
 import (
 	"encoding/json"
 	"strconv"
-	"time"
 
 	"github.com/sepuka/campaner/internal/errors"
 
@@ -59,8 +58,11 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 				Error(`cannot cancel task`)
 			return errors.NewStorageError(`taskManager`, err)
 		}
-		reminder.Subject = []string{`напоминание отменено`}
-		reminder.When = time.Nanosecond
+		// TODO снабдить reminder возможностью указывать кнопки, например  json keybord в новом поле бд
+		// затем тут можно будет сделать так
+		//reminder.Subject = []string{`напоминание отменено`}
+		//reminder.When = time.Nanosecond
+		// и юзер получит ответ без кнопок
 	case domainApi.Later15MinButton:
 		if !a.featureToggle.IsEnabled(reminder.Whom, featureDomain.Postpone) {
 			return nil
