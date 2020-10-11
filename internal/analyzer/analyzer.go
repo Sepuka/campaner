@@ -25,15 +25,13 @@ type Glossary map[string]Parser
 type Analyzer struct {
 	glossary      Glossary
 	logger        *zap.SugaredLogger
-	taskManager   domain.TaskManager
 	featureToggle featureDomain.FeatureToggle
 }
 
-func NewAnalyzer(glossary Glossary, logger *zap.SugaredLogger, taskManager domain.TaskManager, feature featureDomain.FeatureToggle) *Analyzer {
+func NewAnalyzer(glossary Glossary, logger *zap.SugaredLogger, feature featureDomain.FeatureToggle) *Analyzer {
 	return &Analyzer{
 		glossary:      glossary,
 		logger:        logger,
-		taskManager:   taskManager,
 		featureToggle: feature,
 	}
 }

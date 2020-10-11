@@ -9,7 +9,6 @@ import (
 
 	mocks2 "github.com/sepuka/campaner/internal/feature_toggling/toggle/mocks"
 
-	"github.com/sepuka/campaner/internal/repository/mocks"
 	"go.uber.org/zap"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -48,11 +47,10 @@ func TestMain(m *testing.M) {
 
 func TestNewAnalyzer(t *testing.T) {
 	var (
-		repo   = mocks.TaskManager{}
 		ft     = mocks2.FeatureToggle{}
 		logger = zap.NewNop().Sugar()
 	)
-	analyzer := NewAnalyzer(glossary, logger, repo, ft)
+	analyzer := NewAnalyzer(glossary, logger, ft)
 
 	var testCases = map[string]struct {
 		speech           string
@@ -137,11 +135,10 @@ func TestNewAnalyzer(t *testing.T) {
 
 func TestDayOfWeekAnalyzer(t *testing.T) {
 	var (
-		repo   = mocks.TaskManager{}
 		ft     = mocks2.FeatureToggle{}
 		logger = zap.NewNop().Sugar()
 	)
-	analyzer := NewAnalyzer(glossary, logger, repo, ft)
+	analyzer := NewAnalyzer(glossary, logger, ft)
 	var testCases = map[string]struct {
 		words    string
 		reminder *domain.Reminder
@@ -218,10 +215,9 @@ func TestDayOfWeekAnalyzer(t *testing.T) {
 
 func TestDateAnalyzer(t *testing.T) {
 	var (
-		repo           = mocks.TaskManager{}
 		logger         = zap.NewNop().Sugar()
 		ft             = mocks2.FeatureToggle{}
-		analyzer       = NewAnalyzer(glossary, logger, repo, ft)
+		analyzer       = NewAnalyzer(glossary, logger, ft)
 		now            = time.Now()
 		futureMidnight = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Add(calendar.Day * 3)
 		futureMoment   = fmt.Sprintf(`%s в 18:00 собрание`, futureMidnight.Format(calendar.DayMonthFormat))
@@ -254,10 +250,9 @@ func TestDateAnalyzer(t *testing.T) {
 
 func TestUnknownTime(t *testing.T) {
 	var (
-		repo     = mocks.TaskManager{}
 		logger   = zap.NewNop().Sugar()
 		ft       = mocks2.FeatureToggle{}
-		analyzer = NewAnalyzer(glossary, logger, repo, ft)
+		analyzer = NewAnalyzer(glossary, logger, ft)
 		reminder = &domain.Reminder{}
 	)
 

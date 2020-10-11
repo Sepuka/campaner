@@ -34,7 +34,7 @@ func init() {
 					api      = ctx.Get(api2.SendMessageDef).(*method.SendMessage)
 					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
 					analyzer = ctx.Get(analyzer2.AnalyzerDef).(*analyzer3.Analyzer)
-					repo     = ctx.Get(repository.ReminderRepoDef).(domain.ReminderRepository)
+					repo     = ctx.Get(repository.ReminderRepoDef).(domain.TaskManager)
 				)
 
 				return command.NewMessageNew(api, logger, analyzer, repo), nil

@@ -83,58 +83,56 @@ func (r *ReminderRepository) Scheduled(userId int, limit uint32) ([]domain.Remin
 	return models, err
 }
 
-func (r *ReminderRepository) Cancel(taskId int64, userId int) error {
+func (r *ReminderRepository) Cancel(reminder *domain.Reminder) error {
 	var (
-		model = &domain.Reminder{
-			ReminderId: int(taskId),
-		}
 		err error
 	)
 
 	err = r.
 		db.
-		Model(model).
-		Where(`reminder_id = ? AND user_id = ? AND status = ?`, taskId, userId, domain.StatusNew).
+		Model(reminder).
+		Where(`reminder_id = ? AND user_id = ? AND status = ?`, reminder.ReminderId, reminder.Whom, domain.StatusNew).
 		Select()
 
 	if err != nil {
 		return err
 	}
 
-	model.Status = domain.StatusCanceled
+	reminder.Status = domain.StatusCanceled
 
 	return r.
 		db.
-		Update(model)
+		Update(reminder)
 }
 
-func (r *ReminderRepository) Copy(taskId int64, reminder *domain.Reminder, minutes int) error {
+func (r *ReminderRepository) Copy(reminder *domain.Reminder) error {
 	var (
-		executedReminder = &domain.Reminder{
-			ReminderId: int(taskId),
+		donor = &domain.Reminder{
+			ReminderId: reminder.ReminderId,
 		}
 		err error
 	)
 
 	err = r.
 		db.
-		Model(executedReminder).
+		Model(donor).
 		WherePK().
 		Select()
 	if err != nil {
 		return err
 	}
 
-	if executedReminder.Whom != reminder.Whom {
+	if donor.Whom != reminder.Whom {
 		return errors.NewTaskManagerError(`wrong user id`)
 	}
 
-	if executedReminder.Status != domain.StatusSuccess {
+	if donor.Status != domain.StatusSuccess {
 		return errors.NewTaskManagerError(`wrong status`)
 	}
 
-	reminder.When = time.Duration(minutes) * time.Minute
-	reminder.RewriteSubject(executedReminder.What)
+	reminder.RewriteSubject(donor.What)
+	reminder.ReminderId = 0
+	reminder.Status = domain.StatusNew
 
-	return nil
+	return r.Add(reminder)
 }

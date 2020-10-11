@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sepuka/campaner/internal/errors"
+
 	"github.com/sepuka/campaner/internal/api"
 
 	"github.com/sepuka/campaner/internal/api/method"
@@ -24,14 +26,14 @@ type MessageNew struct {
 	api          *method.SendMessage
 	logger       *zap.SugaredLogger
 	analyzer     *analyzer.Analyzer
-	reminderRepo domain.ReminderRepository
+	reminderRepo domain.TaskManager
 }
 
 func NewMessageNew(
 	api *method.SendMessage,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
-	repo domain.ReminderRepository,
+	repo domain.TaskManager,
 ) *MessageNew {
 	return &MessageNew{
 		api:          api,
@@ -56,13 +58,39 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 		return err
 	}
 
-	if err = obj.reminderRepo.Add(reminder); err != nil {
-		obj.
-			logger.
-			With(
-				zap.Error(err),
-			).
-			Error(`cannot save reminder`)
+	switch reminder.Status {
+	case domain.StatusNew:
+		if err = obj.reminderRepo.Add(reminder); err != nil {
+			obj.
+				logger.
+				With(
+					zap.Error(err),
+				).
+				Error(`cannot save reminder`)
+		}
+	case domain.StatusCanceled:
+		if err = obj.reminderRepo.Cancel(reminder); err != nil {
+			obj.
+				logger.
+				With(
+					zap.Error(err),
+					zap.Int(`task_id`, reminder.ReminderId),
+					zap.Int(`user_id`, reminder.Whom),
+				).
+				Error(`cannot save reminder`)
+		}
+	case domain.StatusCopied:
+		if err = obj.reminderRepo.Copy(reminder); err != nil {
+			obj.
+				logger.
+				With(
+					zap.Int(`task_id`, reminder.ReminderId),
+					zap.Int(`user_id`, reminder.Whom),
+					zap.Error(err),
+				).
+				Error(`cannot prolong task`)
+			return errors.NewStorageError(`taskManager`, err)
+		}
 	}
 
 	if !reminder.IsImmediate() {

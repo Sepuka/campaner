@@ -21,11 +21,11 @@ const (
 	StatusSuccess
 	StatusFailed
 	StatusCanceled
+	StatusCopied
 )
 
 type (
 	ReminderRepository interface {
-		Add(reminder *Reminder) error
 		FindActual(timestamp time.Time) ([]Reminder, *pg.Tx, error)
 		SetStatus(*Reminder, *pg.Tx) (pg.Result, error)
 		Commit(*pg.Tx) error
@@ -33,8 +33,9 @@ type (
 	}
 
 	TaskManager interface {
-		Cancel(taskId int64, userId int) error
-		Copy(taskId int64, reminder *Reminder, minutes int) error
+		Add(reminder *Reminder) error
+		Cancel(reminder *Reminder) error
+		Copy(reminder *Reminder) error
 	}
 
 	Reminder struct {

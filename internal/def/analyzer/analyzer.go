@@ -7,8 +7,6 @@ import (
 	"github.com/sepuka/campaner/internal/def"
 	"github.com/sepuka/campaner/internal/def/feature_toggling"
 	"github.com/sepuka/campaner/internal/def/log"
-	"github.com/sepuka/campaner/internal/def/repository"
-	"github.com/sepuka/campaner/internal/domain"
 	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
 	"go.uber.org/zap"
 )
@@ -28,7 +26,6 @@ func init() {
 					glossary = make(analyzer.Glossary)
 					keyword  string
 					logger   = ctx.Get(log.LoggerDef).(*zap.SugaredLogger)
-					repo     = ctx.Get(repository.ReminderRepoDef).(domain.TaskManager)
 					ft       = ctx.Get(feature_toggling.FeatureToggleDef).(featureDomain.FeatureToggle)
 				)
 
@@ -38,7 +35,7 @@ func init() {
 					}
 				}
 
-				return analyzer.NewAnalyzer(glossary, logger, repo, ft), nil
+				return analyzer.NewAnalyzer(glossary, logger, ft), nil
 			},
 		})
 	})

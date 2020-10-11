@@ -6,14 +6,12 @@ import (
 	"github.com/sepuka/campaner/internal/context"
 	"github.com/sepuka/campaner/internal/domain"
 	mocks2 "github.com/sepuka/campaner/internal/feature_toggling/toggle/mocks"
-	"github.com/sepuka/campaner/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
 func TestBadPayload(t *testing.T) {
 	var (
-		repo   = mocks.TaskManager{}
 		ft     = mocks2.FeatureToggle{}
 		logger = zap.NewNop().Sugar()
 		msg    = context.Message{
@@ -22,7 +20,7 @@ func TestBadPayload(t *testing.T) {
 		reminder = &domain.Reminder{}
 		err      error
 	)
-	analyzer := NewAnalyzer(glossary, logger, repo, ft)
+	analyzer := NewAnalyzer(glossary, logger, ft)
 	err = analyzer.analyzePayload(msg, reminder)
 	assert.NotNil(t, err)
 }

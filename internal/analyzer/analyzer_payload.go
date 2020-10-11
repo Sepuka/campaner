@@ -3,6 +3,7 @@ package analyzer
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/sepuka/campaner/internal/errors"
 
@@ -47,17 +48,8 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 
 	switch text {
 	case domainApi.CancelButton:
-		if err = a.taskManager.Cancel(taskId, reminder.Whom); err != nil {
-			a.
-				logger.
-				With(
-					zap.Int64(`task_id`, taskId),
-					zap.Int(`user_id`, reminder.Whom),
-					zap.Error(err),
-				).
-				Error(`cannot cancel task`)
-			return errors.NewStorageError(`taskManager`, err)
-		}
+		reminder.ReminderId = int(taskId)
+		reminder.Status = domain.StatusCanceled
 		// TODO снабдить reminder возможностью указывать кнопки, например  json keybord в новом поле бд
 		// затем тут можно будет сделать так
 		//reminder.Subject = []string{`напоминание отменено`}
@@ -67,24 +59,11 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 		if !a.featureToggle.IsEnabled(reminder.Whom, featureDomain.Postpone) {
 			return nil
 		}
-		var minutes int
-		switch text {
-		case domainApi.Later15MinButton:
-			minutes = 15
-		default:
-			minutes = 30
-		}
-		if err = a.taskManager.Copy(taskId, reminder, minutes); err != nil {
-			a.
-				logger.
-				With(
-					zap.Int64(`task_id`, taskId),
-					zap.Int(`user_id`, reminder.Whom),
-					zap.Error(err),
-				).
-				Error(`cannot prolong task`)
-			return errors.NewStorageError(`taskManager`, err)
-		}
+
+		reminder.Status = domain.StatusCopied
+		reminder.ReminderId = int(taskId)
+		reminder.When = time.Duration(15) * time.Minute
+
 	}
 
 	return nil
