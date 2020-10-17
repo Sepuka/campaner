@@ -1,9 +1,9 @@
 package analyzer
 
 import (
-	"encoding/json"
-	"strconv"
 	"time"
+
+	payload2 "github.com/sepuka/campaner/internal/analyzer/payload"
 
 	"github.com/sepuka/campaner/internal/errors"
 
@@ -17,24 +17,13 @@ import (
 
 func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder) error {
 	var (
-		payload    domainApi.ButtonPayload
 		err        error
 		taskId     int64
 		rawPayload = msg.Payload
 		text       = domainApi.ButtonText(msg.Text)
 	)
 
-	if err = json.Unmarshal([]byte(rawPayload), &payload); err != nil {
-		a.logger.
-			With(
-				zap.String(`payload`, rawPayload),
-				zap.Error(err),
-			).
-			Error(`analyze payload error`)
-		return errors.NewInvalidSpeechPayloadFormatError(msg, err)
-	}
-
-	if taskId, err = strconv.ParseInt(payload.Button, 10, 64); err != nil {
+	if taskId, err = payload2.GetTaskId(rawPayload); err != nil {
 		a.
 			logger.
 			With(
