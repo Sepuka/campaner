@@ -120,6 +120,14 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, remindId)}.String(),
 						},
 					},
+					{
+						Color: `primary`,
+						Action: domain.Action{
+							Type:    domain.TextButtonType,
+							Label:   domain.OKButton,
+							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, remindId)}.String(),
+						},
+					},
 				},
 			},
 		}

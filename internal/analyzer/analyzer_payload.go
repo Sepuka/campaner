@@ -11,7 +11,6 @@ import (
 
 	"github.com/sepuka/campaner/internal/context"
 	"github.com/sepuka/campaner/internal/domain"
-	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
 	"go.uber.org/zap"
 )
 
@@ -45,14 +44,12 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 		//reminder.When = time.Nanosecond
 		// и юзер получит ответ без кнопок
 	case domainApi.Later15MinButton:
-		if !a.featureToggle.IsEnabled(reminder.Whom, featureDomain.Postpone) {
-			return nil
-		}
-
 		reminder.Status = domain.StatusCopied
 		reminder.ReminderId = int(taskId)
 		reminder.When = time.Duration(15) * time.Minute
-
+	case domainApi.OKButton:
+		reminder.ReminderId = int(taskId)
+		reminder.Status = domain.StatusBarren
 	}
 
 	return nil

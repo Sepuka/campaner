@@ -22,6 +22,7 @@ const (
 	StatusFailed
 	StatusCanceled
 	StatusCopied
+	StatusBarren
 )
 
 type (
