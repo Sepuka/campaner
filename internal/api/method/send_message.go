@@ -133,21 +133,19 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 		}
 	)
 
-	if obj.featureToggle.IsEnabled(peerId, featureDomain.Postpone) {
-		if js, err = json.Marshal(keyboard); err != nil {
-			obj.
-				logger.
-				With(
-					zap.Any(`request`, keyboard),
-					zap.Error(err),
-				).
-				Errorf(`build keyboard query string error`)
+	if js, err = json.Marshal(keyboard); err != nil {
+		obj.
+			logger.
+			With(
+				zap.Any(`request`, keyboard),
+				zap.Error(err),
+			).
+			Errorf(`build keyboard query string error`)
 
-			return err
-		}
-
-		payload.Keyboard = string(js)
+		return err
 	}
+
+	payload.Keyboard = string(js)
 
 	return obj.send(payload)
 }
