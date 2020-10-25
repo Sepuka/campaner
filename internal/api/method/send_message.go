@@ -150,6 +150,20 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 	return obj.send(payload)
 }
 
+func (obj *SendMessage) SendFlat(peerId int, text string) error {
+	var (
+		payload = domain.MessagesSend{
+			Message:     text,
+			AccessToken: obj.cfg.Api.Token,
+			ApiVersion:  api.Version,
+			PeerId:      peerId,
+			RandomId:    api.Rnd(),
+		}
+	)
+
+	return obj.send(payload)
+}
+
 func (obj *SendMessage) send(msgStruct domain.MessagesSend) error {
 	var (
 		request      *http.Request

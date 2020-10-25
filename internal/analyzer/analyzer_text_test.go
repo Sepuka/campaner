@@ -101,21 +101,21 @@ func TestNewAnalyzer(t *testing.T) {
 		`днем`: {
 			speech: `днем`,
 			expectedReminder: &domain.Reminder{
-				Subject: strings.Split(`ring!`, ` `),
+				Subject: strings.Split(`днем`, ` `),
 				When:    time.Until(calendar.NextAfternoon()),
 			},
 		},
 		`вечером`: {
 			speech: `вечером`,
 			expectedReminder: &domain.Reminder{
-				Subject: strings.Split(`ring!`, ` `),
+				Subject: strings.Split(`вечером`, ` `),
 				When:    time.Until(calendar.NextEvening()),
 			},
 		},
 		`ночью`: {
 			speech: `ночью`,
 			expectedReminder: &domain.Reminder{
-				Subject: strings.Split(`ring!`, ` `),
+				Subject: strings.Split(`ночью`, ` `),
 				When:    time.Until(calendar.NextNight()),
 			},
 		},

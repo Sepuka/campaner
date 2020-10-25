@@ -58,3 +58,7 @@ func (s *Speech) ApplyPattern(pattern *Pattern) error {
 
 	return nil
 }
+
+func (s *Speech) GetWords() []string {
+	return s.words
+}

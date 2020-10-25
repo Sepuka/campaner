@@ -91,6 +91,18 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 				Error(`cannot prolong task`)
 			return errors.NewStorageError(`taskManager`, err)
 		}
+	case domain.StatusUnknownPattern:
+		if err = obj.api.SendFlat(reminder.Whom, reminder.What); err != nil {
+			obj.
+				logger.
+				With(
+					zap.Int(`task_id`, reminder.ReminderId),
+					zap.Int(`user_id`, reminder.Whom),
+					zap.Error(err),
+				).
+				Error(`cannot send promt`)
+			return err
+		}
 	}
 
 	if !reminder.IsImmediate() {
