@@ -92,7 +92,7 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 			return errors.NewStorageError(`taskManager`, err)
 		}
 	case domain.StatusUnknownPattern:
-		if err = obj.api.SendFlat(reminder.Whom, reminder.What); err != nil {
+		if err = obj.api.SendFlat(reminder.Whom, reminder.GetSubject()); err != nil {
 			obj.
 				logger.
 				With(
