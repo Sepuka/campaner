@@ -23,6 +23,7 @@ var (
 		NewTimeParser(),
 		NewDayParser(),
 		NewDateParser(),
+		NewDateMonthParser(),
 		NewTimesOfDayParser(),
 		NewDateTimeAggregateParser([]Parser{NewTimeParser(), NewDayParser()}),
 	}
@@ -243,6 +244,56 @@ func TestDateAnalyzer(t *testing.T) {
 			actualReminder   = &domain.Reminder{}
 		)
 		analyzer.analyzeText(testCase.words, actualReminder)
+		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
+	}
+}
+
+func TestDateMonthAnalyzer(t *testing.T) {
+	var (
+		now               = time.Now()
+		lastDayOfThisYear = time.Date(now.Year(), 12, 31, 9, 0, 0, 0, time.Local)
+		actualErr         error
+	)
+
+	var testCases = map[string]struct {
+		words    string
+		reminder *domain.Reminder
+		wantErr  bool
+	}{
+		`31 декабря корпоративная вечеринка`: {
+			words: `31 декабря корпоративная вечеринка`,
+			reminder: &domain.Reminder{
+				Subject: strings.Split(`корпоративная вечеринка`, ` `),
+				When:    time.Until(lastDayOfThisYear),
+			},
+			wantErr: false,
+		},
+		`дата дублирована`: {
+			words: `31 31 декабря корпоративная вечеринка`,
+			reminder: &domain.Reminder{
+				Subject: strings.Split(`корпоративная вечеринка`, ` `),
+				When:    time.Until(lastDayOfThisYear),
+			},
+			wantErr: false,
+		},
+	}
+
+	for testName, testCase := range testCases {
+		var (
+			testError        = fmt.Sprintf(`test "%s" error`, testName)
+			expectedReminder = testCase.reminder
+			actualReminder   = &domain.Reminder{}
+			logger           = zap.NewNop().Sugar()
+			ft               = mocks2.FeatureToggle{}
+			analyzer         = NewAnalyzer(glossary, logger, ft)
+		)
+
+		actualErr = analyzer.analyzeText(testCase.words, actualReminder)
+		if testCase.wantErr && actualErr == nil {
+			t.Errorf("Parse() error = %v, wantErr %v", actualErr, testCase.wantErr)
+			return
+		}
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}

@@ -3,10 +3,12 @@ package calendar
 import "time"
 
 const (
-	daysOfAYear = 365
-	sunday      = time.Saturday + 1
-	Day         = time.Hour * 24
-	Year        = Day * daysOfAYear
+	daysOfAYear   = 365
+	MinDayOfMonth = 1
+	MaxDayOfMonth = 31
+	sunday        = time.Saturday + 1
+	Day           = time.Hour * 24
+	Year          = Day * daysOfAYear
 )
 
 func NextSunday() *Date {

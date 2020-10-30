@@ -43,6 +43,11 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 			switch errors.GetType(err) {
 			case errors.ItIsPastTimeError:
 				what = `it is past time!`
+			case errors.NotATimeError:
+				if err = speech.ApplyPattern(pattern); err == nil {
+					return a.buildReminder(speech, reminder)
+				}
+				return err
 			default:
 				patterns = strings.Join(parser.PatternList(), "\n")
 				what = fmt.Sprintf("use known format, for instance:\n%s\n", patterns)
