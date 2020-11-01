@@ -2,6 +2,7 @@ package errors
 
 const (
 	NoType = ErrorType(iota)
+	SecurityError
 	UnConsistentGlossaryError
 	ItIsPastTimeError
 	UnknownDimensionError
@@ -13,6 +14,7 @@ const (
 	PatternLengthIncorrect
 	InvalidSpeechPayload
 	Storage
+	Tasks
 )
 
 type ErrorType uint

@@ -9,6 +9,9 @@ import (
 	url2 "net/url"
 	"strings"
 
+	"github.com/sepuka/campaner/internal/calendar"
+	domain2 "github.com/sepuka/campaner/internal/domain"
+
 	"github.com/google/go-querystring/query"
 	"github.com/sepuka/campaner/internal/api"
 	"github.com/sepuka/campaner/internal/api/domain"
@@ -47,24 +50,13 @@ func NewSendMessage(
 	}
 }
 
-func (obj *SendMessage) SendIntention(peerId int, text string, cancelId int) error {
+func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2.Reminder) error {
 	var (
 		err      error
 		params   url2.Values
 		keyboard = domain.Keyboard{
 			OneTime: true,
-			Buttons: [][]domain.Button{
-				{
-					{
-						Color: `negative`,
-						Action: domain.Action{
-							Type:    domain.TextButtonType,
-							Label:   domain.CancelButton,
-							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, cancelId)}.String(),
-						},
-					},
-				},
-			},
+			Buttons: cancel(reminder.ReminderId),
 		}
 
 		payload = domain.MessagesSend{
@@ -79,6 +71,10 @@ func (obj *SendMessage) SendIntention(peerId int, text string, cancelId int) err
 		maskedParams      = strings.Replace(params.Encode(), obj.cfg.Api.Token, maskedAccessToken, 1)
 		js                []byte
 	)
+
+	if calendar.IsNotSoon(reminder.When) {
+		keyboard.Buttons = cancelWithEve(reminder.ReminderId)
+	}
 
 	if js, err = json.Marshal(keyboard); err != nil {
 		obj.
@@ -110,26 +106,7 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 		js       []byte
 		keyboard = domain.Keyboard{
 			OneTime: true,
-			Buttons: [][]domain.Button{
-				{
-					{
-						Color: `positive`,
-						Action: domain.Action{
-							Type:    domain.TextButtonType,
-							Label:   domain.Later15MinButton,
-							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, remindId)}.String(),
-						},
-					},
-					{
-						Color: `primary`,
-						Action: domain.Action{
-							Type:    domain.TextButtonType,
-							Label:   domain.OKButton,
-							Payload: domain.ButtonPayload{Button: fmt.Sprintf(`%d`, remindId)}.String(),
-						},
-					},
-				},
-			},
+			Buttons: cancel(remindId),
 		}
 	)
 

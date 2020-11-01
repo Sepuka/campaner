@@ -3,6 +3,8 @@ package analyzer
 import (
 	"time"
 
+	"github.com/sepuka/campaner/internal/api/method"
+
 	payload2 "github.com/sepuka/campaner/internal/analyzer/payload"
 
 	"github.com/sepuka/campaner/internal/errors"
@@ -35,7 +37,7 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 	}
 
 	switch text {
-	case domainApi.CancelButton:
+	case method.CancelButton:
 		reminder.ReminderId = int(taskId)
 		reminder.Status = domain.StatusCanceled
 		// TODO снабдить reminder возможностью указывать кнопки, например  json keybord в новом поле бд
@@ -43,13 +45,16 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 		//reminder.Subject = []string{`напоминание отменено`}
 		//reminder.When = time.Nanosecond
 		// и юзер получит ответ без кнопок
-	case domainApi.Later15MinButton:
+	case method.Later15MinButton:
 		reminder.Status = domain.StatusCopied
 		reminder.ReminderId = int(taskId)
 		reminder.When = time.Duration(15) * time.Minute
-	case domainApi.OKButton:
+	case method.OKButton:
 		reminder.ReminderId = int(taskId)
 		reminder.Status = domain.StatusBarren
+	case method.OnTheEve:
+		reminder.ReminderId = int(taskId)
+		reminder.Status = domain.StatusShifted
 	}
 
 	return nil

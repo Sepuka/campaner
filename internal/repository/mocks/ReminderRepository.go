@@ -18,20 +18,6 @@ type ReminderRepository struct {
 	mock.Mock
 }
 
-// Add provides a mock function with given fields: reminder
-func (_m ReminderRepository) Add(reminder *domain.Reminder) error {
-	ret := _m.Called(reminder)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.Reminder) error); ok {
-		r0 = rf(reminder)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // Commit provides a mock function with given fields: _a0
 func (_m ReminderRepository) Commit(_a0 *pg.Tx) error {
 	ret := _m.Called(_a0)
@@ -76,6 +62,29 @@ func (_m ReminderRepository) FindActual(timestamp time.Time) ([]domain.Reminder,
 	}
 
 	return r0, r1, r2
+}
+
+// Get provides a mock function with given fields: _a0
+func (_m ReminderRepository) Get(_a0 int) (*domain.Reminder, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *domain.Reminder
+	if rf, ok := ret.Get(0).(func(int) *domain.Reminder); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.Reminder)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Scheduled provides a mock function with given fields: userId, limit

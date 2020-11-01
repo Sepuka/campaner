@@ -1,8 +1,6 @@
 package analyzer
 
 import (
-	"math/rand"
-
 	featureDomain "github.com/sepuka/campaner/internal/feature_toggling/domain"
 
 	"github.com/sepuka/campaner/internal/context"
@@ -47,18 +45,4 @@ func (a *Analyzer) Analyze(msg context.Message, reminder *domain.Reminder) error
 	} else {
 		return a.analyzeText(text, reminder)
 	}
-}
-
-func (a *Analyzer) getRandomStatement(seed int64) string {
-	rand.Seed(seed)
-	var statements = []string{
-		`через 30 минут позвонить другу`,
-		`завтра вынести мусор`,
-		`вечером сделать домашнюю работу`,
-		`в субботу купить корм коту`,
-	}
-
-	var rnd = rand.Intn(len(statements) - 1)
-
-	return statements[rnd]
 }

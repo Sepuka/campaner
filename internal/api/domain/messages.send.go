@@ -1,15 +1,7 @@
 package domain
 
-type ButtonText string
-
-const (
-	TextButtonType   ButtonType = `text`
-	CancelButton     ButtonText = `cancel`
-	OKButton         ButtonText = `OK`
-	Later15MinButton ButtonText = `15 minutes`
-)
-
 type (
+	ButtonText string
 	ButtonType string
 	Action     struct {
 		Type    ButtonType `json:"type"`

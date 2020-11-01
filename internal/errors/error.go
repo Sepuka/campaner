@@ -41,6 +41,11 @@ func (e campanerError) Wrapf(err error, msg string, args ...interface{}) error {
 	}
 }
 
+func NewSecurityError() error {
+	return campanerError{
+		errorType: SecurityError,
+	}
+}
 func NewNotATimeError() error {
 	return campanerError{
 		errorType:     NotATimeError,

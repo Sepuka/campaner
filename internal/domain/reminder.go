@@ -22,7 +22,7 @@ const (
 	StatusFailed
 	StatusCanceled
 	StatusCopied
-	StatusUnknownPattern
+	StatusShifted
 	StatusBarren
 )
 
@@ -32,12 +32,14 @@ type (
 		SetStatus(*Reminder, *pg.Tx) (pg.Result, error)
 		Commit(*pg.Tx) error
 		Scheduled(userId int, limit uint32) ([]Reminder, error)
+		Get(int) (*Reminder, error)
 	}
 
 	TaskManager interface {
-		Add(reminder *Reminder) error
-		Cancel(reminder *Reminder) error
-		Copy(reminder *Reminder) error
+		Add(*Reminder) error
+		Cancel(*Reminder) error
+		Copy(*Reminder) error
+		Shift(*Reminder, time.Time) error
 	}
 
 	Reminder struct {

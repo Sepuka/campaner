@@ -83,6 +83,23 @@ func (r *ReminderRepository) Scheduled(userId int, limit uint32) ([]domain.Remin
 	return models, err
 }
 
+func (r *ReminderRepository) Get(reminderId int) (*domain.Reminder, error) {
+	var (
+		err      error
+		reminder = &domain.Reminder{
+			ReminderId: reminderId,
+		}
+	)
+
+	err = r.
+		db.
+		Model(reminder).
+		WherePK().
+		Select()
+
+	return reminder, err
+}
+
 func (r *ReminderRepository) Cancel(reminder *domain.Reminder) error {
 	var (
 		err error
@@ -98,7 +115,7 @@ func (r *ReminderRepository) Cancel(reminder *domain.Reminder) error {
 		return err
 	}
 
-	reminder.Status = domain.StatusCanceled
+	reminder.Status = int(domain.StatusCanceled)
 
 	return r.
 		db.
@@ -126,13 +143,21 @@ func (r *ReminderRepository) Copy(reminder *domain.Reminder) error {
 		return errors.NewTaskManagerError(`wrong user id`)
 	}
 
-	if donor.Status != domain.StatusSuccess {
+	if donor.Status != int(domain.StatusSuccess) {
 		return errors.NewTaskManagerError(`wrong status`)
 	}
 
 	reminder.RewriteSubject(donor.What)
 	reminder.ReminderId = 0
-	reminder.Status = domain.StatusNew
+	reminder.Status = int(domain.StatusNew)
 
 	return r.Add(reminder)
+}
+
+func (r *ReminderRepository) Shift(reminder *domain.Reminder, updatedAt time.Time) error {
+	reminder.NotifyAt = updatedAt
+
+	return r.
+		db.
+		Update(reminder)
 }

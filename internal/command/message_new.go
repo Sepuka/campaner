@@ -2,8 +2,11 @@ package command
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/sepuka/campaner/internal/tasks"
 
 	"github.com/sepuka/campaner/internal/errors"
 
@@ -23,23 +26,23 @@ import (
 )
 
 type MessageNew struct {
-	api          *method.SendMessage
-	logger       *zap.SugaredLogger
-	analyzer     *analyzer.Analyzer
-	reminderRepo domain.TaskManager
+	api      *method.SendMessage
+	logger   *zap.SugaredLogger
+	analyzer *analyzer.Analyzer
+	store    *tasks.TaskBroker
 }
 
 func NewMessageNew(
 	api *method.SendMessage,
 	logger *zap.SugaredLogger,
 	analyzer *analyzer.Analyzer,
-	repo domain.TaskManager,
+	store *tasks.TaskBroker,
 ) *MessageNew {
 	return &MessageNew{
-		api:          api,
-		logger:       logger,
-		analyzer:     analyzer,
-		reminderRepo: repo,
+		api:      api,
+		logger:   logger,
+		analyzer: analyzer,
+		store:    store,
 	}
 }
 
@@ -55,54 +58,26 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 	}
 
 	if err = obj.analyzer.Analyze(msg, reminder); err != nil {
+		if errors.IsNotATimeError(err) {
+			var randomSubject = fmt.Sprintf(`Попробуйте фразу: "%s"`, obj.getRandomStatement(time.Now().Unix()))
+			reminder.RewriteSubject(randomSubject)
+
+			return obj.api.SendFlat(reminder.Whom, reminder.GetSubject())
+		}
 		return err
 	}
 
-	switch reminder.Status {
-	case domain.StatusNew:
-		if err = obj.reminderRepo.Add(reminder); err != nil {
-			obj.
-				logger.
-				With(
-					zap.Error(err),
-				).
-				Error(`cannot save reminder`)
-		}
-	case domain.StatusCanceled:
-		if err = obj.reminderRepo.Cancel(reminder); err != nil {
-			obj.
-				logger.
-				With(
-					zap.Error(err),
-					zap.Int(`task_id`, reminder.ReminderId),
-					zap.Int(`user_id`, reminder.Whom),
-				).
-				Error(`cannot save reminder`)
-		}
-	case domain.StatusCopied:
-		if err = obj.reminderRepo.Copy(reminder); err != nil {
-			obj.
-				logger.
-				With(
-					zap.Int(`task_id`, reminder.ReminderId),
-					zap.Int(`user_id`, reminder.Whom),
-					zap.Error(err),
-				).
-				Error(`cannot prolong task`)
-			return errors.NewStorageError(`taskManager`, err)
-		}
-	case domain.StatusUnknownPattern:
-		if err = obj.api.SendFlat(reminder.Whom, reminder.GetSubject()); err != nil {
-			obj.
-				logger.
-				With(
-					zap.Int(`task_id`, reminder.ReminderId),
-					zap.Int(`user_id`, reminder.Whom),
-					zap.Error(err),
-				).
-				Error(`cannot send promt`)
-			return err
-		}
+	if err = obj.store.Manage(reminder); err != nil {
+		obj.
+			logger.
+			With(
+				zap.Error(err),
+				zap.Int(`reminder_id`, reminder.ReminderId),
+				zap.Int(`user_id`, reminder.Whom),
+				zap.Int(`status`, reminder.Status),
+			).
+			Error(`cannot manage reminder`)
+		return err
 	}
 
 	if !reminder.IsImmediate() {
@@ -136,7 +111,7 @@ func (obj *MessageNew) confirmMsg(reminder *domain.Reminder) {
 		text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
 	}
 
-	if err = obj.api.SendIntention(whom, text, reminder.ReminderId); err != nil {
+	if err = obj.api.SendIntention(whom, text, reminder); err != nil {
 		obj.
 			logger.
 			With(
@@ -151,4 +126,18 @@ func (obj *MessageNew) Precept() []string {
 	return []string{
 		`message_new`,
 	}
+}
+
+func (obj *MessageNew) getRandomStatement(seed int64) string {
+	rand.Seed(seed)
+	var statements = []string{
+		`через 30 минут позвонить другу`,
+		`завтра вынести мусор`,
+		`вечером сделать домашнюю работу`,
+		`в субботу купить корм коту`,
+	}
+
+	var rnd = rand.Intn(len(statements) - 1)
+
+	return statements[rnd]
 }

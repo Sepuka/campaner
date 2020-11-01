@@ -3,7 +3,6 @@ package analyzer
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/sepuka/campaner/internal/domain"
 	"github.com/sepuka/campaner/internal/errors"
@@ -26,10 +25,7 @@ func (a *Analyzer) buildReminder(speech *speeches.Speech, reminder *domain.Remin
 			reminder.AppendSubject(speeches.NewPattern(speech.GetWords()))
 		}
 		if reminder.IsTimeUnknown() {
-			var randomSubject = fmt.Sprintf(`Попробуйте фразу: "%s"`, a.getRandomStatement(time.Now().Unix()))
-			reminder.RewriteSubject(randomSubject)
-			reminder.When = time.Second
-			reminder.Status = domain.StatusUnknownPattern
+			return errors.NewNotATimeError()
 		}
 		return nil
 	}

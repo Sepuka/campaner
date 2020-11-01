@@ -301,13 +301,14 @@ func TestDateMonthAnalyzer(t *testing.T) {
 
 func TestUnknownTime(t *testing.T) {
 	var (
-		logger   = zap.NewNop().Sugar()
-		ft       = mocks2.FeatureToggle{}
-		analyzer = NewAnalyzer(glossary, logger, ft)
-		reminder = &domain.Reminder{}
+		logger      = zap.NewNop().Sugar()
+		ft          = mocks2.FeatureToggle{}
+		analyzer    = NewAnalyzer(glossary, logger, ft)
+		reminder    = &domain.Reminder{}
+		actualError error
 	)
 
-	analyzer.analyzeText(`abc def`, reminder)
-	assert.Equal(t, float64(1), reminder.When.Seconds())
-	assert.True(t, strings.HasPrefix(reminder.GetSubject(), `Попробуйте фразу:`))
+	actualError = analyzer.analyzeText(`abc def`, reminder)
+	assert.Error(t, actualError)
+	assert.Equal(t, float64(0), reminder.When.Seconds())
 }

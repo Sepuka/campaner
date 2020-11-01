@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	domain2 "github.com/sepuka/campaner/internal/api/domain"
+	"github.com/sepuka/campaner/internal/api/method"
 
 	"github.com/sepuka/campaner/internal/context"
 	"github.com/sepuka/campaner/internal/domain"
@@ -27,7 +27,7 @@ func TestPayloadWithCancelButton(t *testing.T) {
 		}{
 			`normal cancel`: {
 				msg: context.Message{
-					Text:    string(domain2.CancelButton),
+					Text:    string(method.CancelButton),
 					Payload: `{"button":"12345"}`,
 				},
 				status: domain.StatusCanceled,
@@ -35,7 +35,7 @@ func TestPayloadWithCancelButton(t *testing.T) {
 			},
 			`cancel without taskId`: {
 				msg: context.Message{
-					Text:    string(domain2.CancelButton),
+					Text:    string(method.CancelButton),
 					Payload: ``,
 				},
 				status: domain.StatusNew,
@@ -43,7 +43,7 @@ func TestPayloadWithCancelButton(t *testing.T) {
 			},
 			`normal 15 minutes`: {
 				msg: context.Message{
-					Text:    string(domain2.Later15MinButton),
+					Text:    string(method.Later15MinButton),
 					Payload: `{"button":"12345"}`,
 				},
 				status: domain.StatusCopied,
@@ -51,7 +51,7 @@ func TestPayloadWithCancelButton(t *testing.T) {
 			},
 			`15 minutes without taskId`: {
 				msg: context.Message{
-					Text:    string(domain2.Later15MinButton),
+					Text:    string(method.Later15MinButton),
 					Payload: ``,
 				},
 				status: domain.StatusNew,
@@ -59,7 +59,7 @@ func TestPayloadWithCancelButton(t *testing.T) {
 			},
 			`normal OK button`: {
 				msg: context.Message{
-					Text:    string(domain2.OKButton),
+					Text:    string(method.OKButton),
 					Payload: `{"button":"12345"}`,
 				},
 				status: domain.StatusBarren,

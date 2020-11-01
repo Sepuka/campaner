@@ -2,6 +2,10 @@ package calendar
 
 import "time"
 
+const (
+	notSoon = Day * 2
+)
+
 func LastMidnight() time.Time {
 	now := time.Now()
 
@@ -38,4 +42,8 @@ func nextPartOfADay(hour int) time.Time {
 	}
 
 	return nextMorning
+}
+
+func IsNotSoon(when time.Duration) bool {
+	return when > notSoon
 }
