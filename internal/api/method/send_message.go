@@ -106,7 +106,7 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 		js       []byte
 		keyboard = domain.Keyboard{
 			OneTime: true,
-			Buttons: cancel(remindId),
+			Buttons: delayAndOk(remindId),
 		}
 	)
 

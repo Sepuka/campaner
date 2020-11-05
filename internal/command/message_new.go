@@ -89,12 +89,11 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 
 func (obj *MessageNew) confirmMsg(reminder *domain.Reminder) {
 	var (
-		err   error
-		text  string
-		delay = reminder.When
-		whom  = reminder.Whom
+		err  error
+		text string
+		whom = reminder.Whom
 
-		notificationTime  = time.Now().Add(delay)
+		notificationTime  = time.Now().Add(reminder.When)
 		todayMidnight     = calendar.NextMidnight()
 		yesterdayMidnight = calendar.LastMidnight()
 	)
