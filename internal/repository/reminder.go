@@ -155,8 +155,6 @@ func (r *ReminderRepository) Copy(reminder *domain.Reminder) error {
 }
 
 func (r *ReminderRepository) Shift(reminder *domain.Reminder) error {
-	reminder.NotifyAt = time.Now().Add(reminder.When)
-
 	_, err := r.
 		db.
 		Model(reminder).
