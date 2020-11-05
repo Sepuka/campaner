@@ -51,6 +51,7 @@ func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 
 	timeToEvent = timeToEvent.Add(-calendar.Day).Evening()
 	shiftedTime = time.Now().Add(timeToEvent.Until())
+	reminder.When = timeToEvent.Until()
 
 	return b.taskManager.Shift(storedReminder, shiftedTime)
 }
