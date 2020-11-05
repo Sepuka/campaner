@@ -67,21 +67,17 @@ func (d *Date) ApplyTime(speech *speeches.Speech) (*Date, error) {
 }
 
 func (d *Date) Morning() *Date {
-	return NewDate(d.setTime(9))
+	return NewDate(time.Date(d.date.Year(), d.date.Month(), d.date.Day(), 9, 0, 0, 0, time.Local))
 }
 
 func (d *Date) Afternoon() *Date {
-	return NewDate(d.setTime(12))
+	return NewDate(time.Date(d.date.Year(), d.date.Month(), d.date.Day(), 12, 0, 0, 0, time.Local))
 }
 
 func (d *Date) Evening() *Date {
-	return NewDate(d.setTime(18))
+	return NewDate(time.Date(d.date.Year(), d.date.Month(), d.date.Day(), 18, 0, 0, 0, time.Local))
 }
 
 func (d *Date) Night() *Date {
-	return NewDate(d.setTime(23))
-}
-
-func (d *Date) setTime(value int) time.Time {
-	return d.date.Add(time.Duration(value) * time.Hour)
+	return NewDate(time.Date(d.date.Year(), d.date.Month(), d.date.Day(), 23, 0, 0, 0, time.Local))
 }

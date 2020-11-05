@@ -130,3 +130,34 @@ func TestShift(t *testing.T) {
 		}
 	}
 }
+
+func TestShift_TimeChecks(t *testing.T) {
+	var (
+		notifyAt         = time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 9, 0, 0, 0, time.Local).Add(10 * calendar.Day)
+		expectedNotifyAt = notifyAt.Add(-15 * time.Hour)
+		taskManager      = mocks.TaskManager{}
+		reminderRepo     = mocks.ReminderRepository{}
+		storedReminder   = &domain.Reminder{
+			ReminderId: 1,
+			Whom:       2,
+			NotifyAt:   notifyAt,
+			Status:     domain.StatusNew,
+		}
+		expectedReminder = storedReminder
+		flowReminder     = &domain.Reminder{
+			ReminderId: 1,
+			Whom:       2,
+		}
+		broker tasks.Broker
+		err    error
+	)
+
+	expectedReminder.NotifyAt = expectedNotifyAt
+	reminderRepo.On(`Get`, mock.Anything).Return(storedReminder, nil)
+	taskManager.On(`Shift`, expectedReminder).Once().Return(nil)
+	broker = NewShiftBroker(taskManager, reminderRepo)
+	err = broker.Service(flowReminder)
+
+	assert.NoError(t, err)
+
+}

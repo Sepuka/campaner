@@ -154,10 +154,15 @@ func (r *ReminderRepository) Copy(reminder *domain.Reminder) error {
 	return r.Add(reminder)
 }
 
-func (r *ReminderRepository) Shift(reminder *domain.Reminder, updatedAt time.Time) error {
-	reminder.NotifyAt = updatedAt
+func (r *ReminderRepository) Shift(reminder *domain.Reminder) error {
+	reminder.NotifyAt = time.Now().Add(reminder.When)
 
-	return r.
+	_, err := r.
 		db.
+		Model(reminder).
+		Column(`notify_at`).
+		WherePK().
 		Update(reminder)
+
+	return err
 }

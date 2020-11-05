@@ -39,7 +39,7 @@ type (
 		Add(*Reminder) error
 		Cancel(*Reminder) error
 		Copy(*Reminder) error
-		Shift(*Reminder, time.Time) error
+		Shift(*Reminder) error
 	}
 
 	Reminder struct {

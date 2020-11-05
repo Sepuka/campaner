@@ -1,8 +1,6 @@
 package broker
 
 import (
-	"time"
-
 	errors2 "github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -29,7 +27,6 @@ func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 		err            error
 		timeToEvent    *calendar.Date
 		storedReminder *domain.Reminder
-		shiftedTime    time.Time
 	)
 
 	if storedReminder, err = b.reminderRepo.Get(reminder.ReminderId); err != nil {
@@ -50,8 +47,7 @@ func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 	}
 
 	timeToEvent = timeToEvent.Add(-calendar.Day).Evening()
-	shiftedTime = time.Now().Add(timeToEvent.Until())
 	reminder.When = timeToEvent.Until()
 
-	return b.taskManager.Shift(storedReminder, shiftedTime)
+	return b.taskManager.Shift(storedReminder)
 }
