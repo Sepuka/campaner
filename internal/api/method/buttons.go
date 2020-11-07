@@ -11,7 +11,7 @@ const (
 	CancelButton     domain.ButtonText = `cancel`
 	OKButton         domain.ButtonText = `OK`
 	Later15MinButton domain.ButtonText = `15 minutes`
-	OnTheEve         domain.ButtonText = `on the eve`
+	OnTheEve         domain.ButtonText = `накануне вечером`
 )
 
 func cancel(cancelId int) [][]domain.Button {
