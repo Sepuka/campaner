@@ -23,11 +23,13 @@ func init() {
 			},
 			Build: func(ctx def.Context) (interface{}, error) {
 				var (
-					timeParser = ctx.Get(TimeParserDef).(analyzer.Parser)
-					dayParser  = ctx.Get(DayParserDef).(analyzer.Parser)
-					parsers    = []analyzer.Parser{
+					timeParser   = ctx.Get(TimeParserDef).(analyzer.Parser)
+					dayParser    = ctx.Get(DayParserDef).(analyzer.Parser)
+					periodParser = ctx.Get(PeriodParserDef).(analyzer.Parser)
+					parsers      = []analyzer.Parser{
 						timeParser,
 						dayParser,
+						periodParser,
 					}
 				)
 

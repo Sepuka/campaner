@@ -50,6 +50,7 @@ func TestNewAnalyzer(t *testing.T) {
 	var (
 		ft     = mocks2.FeatureToggle{}
 		logger = zap.NewNop().Sugar()
+		err    error
 	)
 	analyzer := NewAnalyzer(glossary, logger, ft)
 
@@ -128,7 +129,8 @@ func TestNewAnalyzer(t *testing.T) {
 			expectedReminder = testCase.expectedReminder
 			actualReminder   = domain.NewReminder(0)
 		)
-		analyzer.analyzeText(testCase.speech, actualReminder)
+		err = analyzer.analyzeText(testCase.speech, actualReminder)
+		assert.NoError(t, err)
 		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
 		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
 	}

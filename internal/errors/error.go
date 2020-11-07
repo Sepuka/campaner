@@ -46,10 +46,22 @@ func NewSecurityError() error {
 		errorType: SecurityError,
 	}
 }
+
 func NewNotATimeError() error {
 	return campanerError{
 		errorType:     NotATimeError,
 		originalError: errors.New(`there is not any info about time`),
+	}
+}
+
+func NewUnexpectedPrepositionError(got, want string) error {
+	return campanerError{
+		errorType:     NotATimeError,
+		originalError: errors.New(`unexpected preposition`),
+		context: map[string]string{
+			`got`:  got,
+			`want`: want,
+		},
 	}
 }
 

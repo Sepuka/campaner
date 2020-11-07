@@ -16,10 +16,15 @@ func TestDateTimeAggregateParser(t *testing.T) {
 	if expectedTime.IsPast() {
 		expectedTime = expectedTime.Add(calendar.Day)
 	}
+	expectedOver2Days := calendar.NewDate(calendar.NextMorning()).Add(calendar.Day)
+	expectedOver5Days := calendar.NewDate(calendar.NextMorning()).Add(4 * calendar.Day)
+	expectedOver2Months := calendar.NewDate(calendar.LastMidnight().Add(9 * time.Hour)).Add(calendar.Day * 60)
+	expectedOver8Weeks := calendar.NewDate(calendar.LastMidnight()).Add(9 * time.Hour).Add(calendar.Day * 7 * 8)
 
 	parser := NewDateTimeAggregateParser([]Parser{
 		NewTimeParser(),
 		NewDayParser(),
+		NewPeriodParser(),
 	})
 	var testCases = map[string]struct {
 		speech   *speeches.Speech
@@ -43,6 +48,30 @@ func TestDateTimeAggregateParser(t *testing.T) {
 				When: time.Microsecond,
 			},
 		},
+		`через 2 дня`: {
+			speech: speeches.NewSpeech(`через 2 дня напомни`),
+			expected: &domain.Reminder{
+				When: expectedOver2Days.Until(),
+			},
+		},
+		`через 5 дней`: {
+			speech: speeches.NewSpeech(`через 5 дней будет праздник`),
+			expected: &domain.Reminder{
+				When: expectedOver5Days.Until(),
+			},
+		},
+		`через 8 недель`: {
+			speech: speeches.NewSpeech(`через 8 недель будет что-то`),
+			expected: &domain.Reminder{
+				When: expectedOver8Weeks.Until(),
+			},
+		},
+		`через 2 месяца`: {
+			speech: speeches.NewSpeech(`через 2 месяца новый год`),
+			expected: &domain.Reminder{
+				When: expectedOver2Months.Until(),
+			},
+		},
 	}
 
 	for testName, testCase := range testCases {
@@ -50,6 +79,6 @@ func TestDateTimeAggregateParser(t *testing.T) {
 		actualReminder := &domain.Reminder{}
 		err := parser.Parse(testCase.speech, actualReminder)
 		assert.InDelta(t, testCase.expected.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
-		assert.NoError(t, err, testError)
+		assert.NoError(t, err)
 	}
 }
