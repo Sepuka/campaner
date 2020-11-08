@@ -16,8 +16,8 @@ func TestDateTimeAggregateParser(t *testing.T) {
 	if expectedTime.IsPast() {
 		expectedTime = expectedTime.Add(calendar.Day)
 	}
-	expectedOver2Days := calendar.NewDate(calendar.NextMorning()).Add(calendar.Day)
-	expectedOver5Days := calendar.NewDate(calendar.NextMorning()).Add(4 * calendar.Day)
+	expectedOver2Days := calendar.NewDate(time.Now()).Morning().Add(2 * calendar.Day)
+	expectedOver5Days := calendar.NewDate(time.Now()).Morning().Add(5 * calendar.Day)
 	expectedOver2Months := calendar.NewDate(calendar.LastMidnight().Add(9 * time.Hour)).Add(calendar.Day * 60)
 	expectedOver8Weeks := calendar.NewDate(calendar.LastMidnight()).Add(9 * time.Hour).Add(calendar.Day * 7 * 8)
 
