@@ -73,7 +73,7 @@ func (obj *PeriodParser) Parse(speech *speeches.Speech, reminder *domain.Reminde
 		reminder.When = calendar.NewDate(now).Morning().Add(calendar.Day * time.Duration(period*30)).Until()
 	}
 
-	return nil
+	return speech.ApplyPattern(pattern)
 }
 
 func (obj *PeriodParser) Glossary() []string {

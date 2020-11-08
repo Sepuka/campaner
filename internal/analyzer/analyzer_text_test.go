@@ -25,7 +25,11 @@ var (
 		NewDateParser(),
 		NewDateMonthParser(),
 		NewTimesOfDayParser(),
-		NewDateTimeAggregateParser([]Parser{NewTimeParser(), NewDayParser()}),
+		NewDateTimeAggregateParser([]Parser{
+			NewTimeParser(),
+			NewDayParser(),
+			NewPeriodParser(),
+		}),
 	}
 	glossary = make(map[string]Parser)
 )
@@ -313,4 +317,52 @@ func TestUnknownTime(t *testing.T) {
 	actualError = analyzer.analyzeText(`abc def`, reminder)
 	assert.Error(t, actualError)
 	assert.Equal(t, float64(0), reminder.When.Seconds())
+}
+
+func TestPeriodAnalyzer(t *testing.T) {
+	var (
+		logger   = zap.NewNop().Sugar()
+		ft       = mocks2.FeatureToggle{}
+		analyzer = NewAnalyzer(glossary, logger, ft)
+	)
+
+	var testCases = map[string]struct {
+		words    string
+		reminder *domain.Reminder
+	}{
+		`через 3 дня событие`: {
+			words: `через 3 дня событие`,
+			reminder: &domain.Reminder{
+				Subject: []string{`событие`},
+				When:    calendar.NewDate(time.Now()).Morning().Add(calendar.Day * 3).Until(),
+			},
+		},
+		`через 2 недели событие`: {
+			words: `через 2 недели событие`,
+			reminder: &domain.Reminder{
+				Subject: []string{`событие`},
+				When:    calendar.NewDate(time.Now()).Morning().Add(calendar.Day * 14).Until(),
+			},
+		},
+		`через 5 месяцев событие`: {
+			words: `через 5 месяцев событие`,
+			reminder: &domain.Reminder{
+				Subject: []string{`событие`},
+				When:    calendar.NewDate(time.Now()).Morning().Add(calendar.Day * 30 * 5).Until(),
+			},
+		},
+	}
+
+	for testName, testCase := range testCases {
+		var (
+			testError        = fmt.Sprintf(`test "%s" error`, testName)
+			expectedReminder = testCase.reminder
+			actualReminder   = &domain.Reminder{}
+			err              error
+		)
+		err = analyzer.analyzeText(testCase.words, actualReminder)
+		assert.NoError(t, err)
+		assert.InDelta(t, expectedReminder.When.Seconds(), actualReminder.When.Seconds(), 1, testError)
+		assert.Equal(t, expectedReminder.GetSubject(), actualReminder.GetSubject(), testError)
+	}
 }
