@@ -81,3 +81,7 @@ func (d *Date) Evening() *Date {
 func (d *Date) Night() *Date {
 	return NewDate(time.Date(d.date.Year(), d.date.Month(), d.date.Day(), 23, 0, 0, 0, time.Local))
 }
+
+func (d *Date) NextYear() *Date {
+	return NewDate(time.Date(d.date.Year()+1, d.date.Month(), d.date.Day(), d.date.Hour(), d.date.Minute(), d.date.Second(), 0, time.Local))
+}

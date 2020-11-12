@@ -21,21 +21,21 @@ func NewDateParser() *DateParser {
 func (obj *DateParser) Parse(speech *speeches.Speech, reminder *domain.Reminder) error {
 	const patternLength = 1
 	var (
-		midnight time.Time
-		err      error
-		pattern  *speeches.Pattern
-		when     *calendar.Date
+		date    time.Time
+		err     error
+		pattern *speeches.Pattern
+		when    *calendar.Date
 	)
 
 	if pattern, err = speech.TryPattern(patternLength); err != nil {
 		return err
 	}
 
-	if midnight, err = time.Parse(calendar.DayMonthFormat, pattern.Origin()); err != nil {
+	if date, err = time.Parse(calendar.DayMonthFormat, pattern.Origin()); err != nil {
 		return err
 	}
-	midnight = time.Date(time.Now().Year(), midnight.Month(), midnight.Day(), 9, 0, 0, 0, time.Local)
-	when = calendar.NewDate(midnight)
+	date = time.Date(time.Now().Year(), date.Month(), date.Day(), 9, 0, 0, 0, time.Local)
+	when = calendar.NewDate(date)
 
 	if err = speech.ApplyPattern(pattern); err != nil {
 		return err

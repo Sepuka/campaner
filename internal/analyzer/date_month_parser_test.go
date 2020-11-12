@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/sepuka/campaner/internal/calendar"
 	"github.com/sepuka/campaner/internal/domain"
 	"github.com/sepuka/campaner/internal/speeches"
 )
@@ -15,7 +14,7 @@ import (
 func TestDateMonthParser(t *testing.T) {
 	var (
 		now        = time.Now()
-		newYearDay = time.Date(now.Year(), 1, 1, 9, 0, 0, 0, time.Local).Add(calendar.Year)
+		newYearDay = time.Date(now.Year()+1, 1, 1, 9, 0, 0, 0, time.Local)
 	)
 
 	tests := []struct {
@@ -36,6 +35,15 @@ func TestDateMonthParser(t *testing.T) {
 			expected: &domain.Reminder{
 				Subject: strings.Split(`будет важное событие`, ` `),
 				When:    time.Until(newYearDay),
+			},
+			wantErr: false,
+		},
+		{
+			name:   `1-th january at Time an important event`,
+			speech: speeches.NewSpeech(`1 января в 13:45 будет важное событие`),
+			expected: &domain.Reminder{
+				Subject: strings.Split(`будет важное событие`, ` `),
+				When:    time.Until(newYearDay.Add(4 * time.Hour).Add(45 * time.Minute)),
 			},
 			wantErr: false,
 		},

@@ -73,8 +73,15 @@ func (obj *DateMonthParser) Parse(speech *speeches.Speech, reminder *domain.Remi
 	}
 
 	when = calendar.NewDate(time.Date(now.Year(), month, int(value), 9, 0, 0, 0, time.Local))
+
 	if when.IsPast() {
-		when = when.Add(calendar.Year)
+		when = when.NextYear()
+	}
+
+	if when, err = when.ApplyTime(speech); err != nil {
+		if !errors.IsNotATimeError(err) {
+			return err
+		}
 	}
 
 	reminder.When = when.Until()
