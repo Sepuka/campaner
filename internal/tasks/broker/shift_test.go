@@ -1,8 +1,11 @@
 package broker
 
 import (
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/sepuka/campaner/internal/api/method"
 
 	"github.com/stretchr/testify/mock"
 
@@ -28,8 +31,9 @@ func TestShift(t *testing.T) {
 		anotherReminderId = 2
 		anotherWhom       = 2
 
-		wrongStatusReminderId = 3
-		tooLateReminderId     = 4
+		wrongStatusReminderId        = 3
+		tooLateForEveReminderId      = 4
+		tooLateFor5MinutesReminderId = 5
 	)
 	var (
 		anotherReminder = &domain.Reminder{
@@ -39,10 +43,15 @@ func TestShift(t *testing.T) {
 			When:       0,
 			Status:     0,
 		}
-		tooLateReminder = &domain.Reminder{
-			ReminderId: tooLateReminderId,
+		tooLateForEveReminder = &domain.Reminder{
+			ReminderId: tooLateForEveReminderId,
 			Whom:       ownerWhom,
 			NotifyAt:   time.Now().Add(calendar.Day),
+		}
+		tooLateFor5MinReminder = &domain.Reminder{
+			ReminderId: tooLateFor5MinutesReminderId,
+			Whom:       ownerWhom,
+			NotifyAt:   time.Now().Add(time.Minute),
 		}
 		wrongStatusReminder = &domain.Reminder{
 			ReminderId: wrongStatusReminderId,
@@ -68,6 +77,7 @@ func TestShift(t *testing.T) {
 			`not existent reminder`: {
 				reminder: &domain.Reminder{
 					ReminderId: notExistentReminderId,
+					Subject:    strings.Split(string(method.OnTheEve), ` `),
 				},
 				wantErr: true,
 				err:     pg.ErrNoRows,
@@ -76,14 +86,25 @@ func TestShift(t *testing.T) {
 				reminder: &domain.Reminder{
 					ReminderId: anotherReminderId,
 					Whom:       ownerWhom,
+					Subject:    strings.Split(string(method.OnTheEve), ` `),
 				},
 				wantErr: true,
 				err:     errors.NewWrongUserError(ownerWhom, anotherWhom),
 			},
-			`it is too late`: {
+			`it is too late (on the eve)`: {
 				reminder: &domain.Reminder{
-					ReminderId: tooLateReminderId,
+					ReminderId: tooLateForEveReminderId,
 					Whom:       ownerWhom,
+					Subject:    strings.Split(string(method.OnTheEve), ` `),
+				},
+				wantErr: true,
+				err:     errors.NewShiftError(10 * time.Second),
+			},
+			`it is too late (before 5 minutes)`: {
+				reminder: &domain.Reminder{
+					ReminderId: tooLateFor5MinutesReminderId,
+					Whom:       ownerWhom,
+					Subject:    strings.Split(string(method.Before5Minutes), ` `),
 				},
 				wantErr: true,
 				err:     errors.NewShiftError(10 * time.Second),
@@ -92,6 +113,7 @@ func TestShift(t *testing.T) {
 				reminder: &domain.Reminder{
 					ReminderId: wrongStatusReminderId,
 					Whom:       ownerWhom,
+					Subject:    strings.Split(string(method.OnTheEve), ` `),
 				},
 				wantErr: true,
 				err:     errors.NewWrongStatusError(wrongStatusReminder.Status, domain.StatusNew),
@@ -100,6 +122,7 @@ func TestShift(t *testing.T) {
 				reminder: &domain.Reminder{
 					ReminderId: ownerReminderId,
 					Whom:       ownerWhom,
+					Subject:    strings.Split(string(method.OnTheEve), ` `),
 				},
 				wantErr: false,
 			},
@@ -108,12 +131,14 @@ func TestShift(t *testing.T) {
 
 	reminderRepo.
 		On(`Get`, notExistentReminderId).Return(nil, pg.ErrNoRows).
-		On(`Get`, tooLateReminderId).Return(tooLateReminder, nil).
+		On(`Get`, tooLateForEveReminderId).Return(tooLateForEveReminder, nil).
+		On(`Get`, tooLateFor5MinutesReminderId).Return(tooLateFor5MinReminder, nil).
 		On(`Get`, anotherReminderId).Return(anotherReminder, nil).
 		On(`Get`, wrongStatusReminderId).Return(wrongStatusReminder, nil).
 		On(`Get`, ownerReminderId).Return(okReminder, nil)
 	taskManager.
-		On(`Shift`, tooLateReminder).Times(0).
+		On(`Shift`, tooLateForEveReminder).Times(0).
+		On(`Shift`, tooLateFor5MinReminder).Times(0).
 		On(`Shift`, anotherReminder).Times(0).
 		On(`Shift`, wrongStatusReminder).Times(0).
 		On(`Shift`, okReminder, mock.Anything).Once().Return(nil)
@@ -131,7 +156,7 @@ func TestShift(t *testing.T) {
 	}
 }
 
-func TestShift_TimeChecks(t *testing.T) {
+func TestShift_TimeCheck_OnTheEve(t *testing.T) {
 	var (
 		notifyAt         = time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 9, 0, 0, 0, time.Local).Add(10 * calendar.Day)
 		expectedNotifyAt = notifyAt.Add(-15 * time.Hour)
@@ -147,6 +172,7 @@ func TestShift_TimeChecks(t *testing.T) {
 		flowReminder     = &domain.Reminder{
 			ReminderId: 1,
 			Whom:       2,
+			Subject:    strings.Split(string(method.OnTheEve), ` `),
 		}
 		broker tasks.Broker
 		err    error
@@ -159,5 +185,35 @@ func TestShift_TimeChecks(t *testing.T) {
 	err = broker.Service(flowReminder)
 
 	assert.NoError(t, err)
+}
 
+func TestShift_TimeCheck_Before5Min(t *testing.T) {
+	var (
+		notifyAtTomorrowMorning = time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 9, 0, 0, 0, time.Local).Add(calendar.Day)
+		expectedNotifyAt        = notifyAtTomorrowMorning.Add(-5 * time.Minute)
+		taskManager             = mocks.TaskManager{}
+		reminderRepo            = mocks.ReminderRepository{}
+		storedReminder          = &domain.Reminder{
+			ReminderId: 1,
+			Whom:       2,
+			NotifyAt:   notifyAtTomorrowMorning,
+			Status:     domain.StatusNew,
+		}
+		expectedReminder = storedReminder
+		flowReminder     = &domain.Reminder{
+			ReminderId: 1,
+			Whom:       2,
+			Subject:    strings.Split(string(method.Before5Minutes), ` `),
+		}
+		broker tasks.Broker
+		err    error
+	)
+
+	expectedReminder.NotifyAt = expectedNotifyAt
+	reminderRepo.On(`Get`, mock.Anything).Return(storedReminder, nil)
+	taskManager.On(`Shift`, expectedReminder).Once().Return(nil)
+	broker = NewShiftBroker(taskManager, reminderRepo)
+	err = broker.Service(flowReminder)
+
+	assert.NoError(t, err)
 }

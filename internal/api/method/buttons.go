@@ -10,7 +10,8 @@ const (
 	TextButtonType   domain.ButtonType = `text`
 	CancelButton     domain.ButtonText = `cancel`
 	OKButton         domain.ButtonText = `OK`
-	Later15MinButton domain.ButtonText = `15 minutes`
+	Later15MinButton domain.ButtonText = `через 15 минут`
+	Before5Minutes   domain.ButtonText = `за 5 минут`
 	OnTheEve         domain.ButtonText = `накануне вечером`
 )
 
@@ -22,6 +23,14 @@ func cancel(cancelId int) [][]domain.Button {
 				Action: domain.Action{
 					Type:    TextButtonType,
 					Label:   CancelButton,
+					Payload: domain.ButtonPayload{Button: strconv.Itoa(cancelId)}.String(),
+				},
+			},
+			{
+				Color: `secondary`,
+				Action: domain.Action{
+					Type:    TextButtonType,
+					Label:   Before5Minutes,
 					Payload: domain.ButtonPayload{Button: strconv.Itoa(cancelId)}.String(),
 				},
 			},

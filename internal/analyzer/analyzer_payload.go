@@ -52,9 +52,10 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 	case method.OKButton:
 		reminder.ReminderId = int(taskId)
 		reminder.Status = domain.StatusBarren
-	case method.OnTheEve:
+	case method.OnTheEve, method.Before5Minutes:
 		reminder.ReminderId = int(taskId)
 		reminder.Status = domain.StatusShifted
+		reminder.RewriteSubject(msg.Text)
 	}
 
 	return nil

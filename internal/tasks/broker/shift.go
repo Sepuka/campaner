@@ -3,6 +3,9 @@ package broker
 import (
 	"time"
 
+	domain2 "github.com/sepuka/campaner/internal/api/domain"
+	"github.com/sepuka/campaner/internal/api/method"
+
 	errors2 "github.com/sepuka/campaner/internal/errors"
 
 	"github.com/sepuka/campaner/internal/calendar"
@@ -27,7 +30,6 @@ func NewShiftBroker(
 func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 	var (
 		err            error
-		timeToEvent    *calendar.Date
 		storedReminder *domain.Reminder
 	)
 
@@ -39,18 +41,52 @@ func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 		return errors2.NewWrongUserError(storedReminder.Whom, reminder.Whom)
 	}
 
-	timeToEvent = calendar.NewDate(storedReminder.NotifyAt)
-	if !calendar.IsNotSoon(timeToEvent.Until()) {
-		return errors2.NewShiftError(timeToEvent.Until())
-	}
-
 	if storedReminder.Status != domain.StatusNew {
 		return errors2.NewWrongStatusError(storedReminder.Status, domain.StatusNew)
 	}
 
-	timeToEvent = timeToEvent.Add(-calendar.Day).Evening()
-	reminder.When = timeToEvent.Until()
+	switch domain2.ButtonText(reminder.GetSubject()) {
+	case method.OnTheEve:
+		reminder.When, err = b.onTheEve(storedReminder)
+	case method.Before5Minutes:
+		reminder.When, err = b.before5Minutes(storedReminder)
+	}
+
+	if err != nil {
+		return err
+	}
+
 	storedReminder.NotifyAt = time.Now().Add(reminder.When)
 
 	return b.taskManager.Shift(storedReminder)
+}
+
+func (b *ShiftBroker) onTheEve(storedReminder *domain.Reminder) (time.Duration, error) {
+	var (
+		timeToEvent *calendar.Date
+	)
+
+	timeToEvent = calendar.NewDate(storedReminder.NotifyAt)
+	if !calendar.IsNotSoon(timeToEvent.Until()) {
+		return 0, errors2.NewShiftError(timeToEvent.Until())
+	}
+
+	timeToEvent = timeToEvent.Add(-calendar.Day).Evening()
+
+	return timeToEvent.Until(), nil
+}
+
+func (b *ShiftBroker) before5Minutes(storedReminder *domain.Reminder) (time.Duration, error) {
+	var (
+		timeToEvent *calendar.Date
+	)
+
+	timeToEvent = calendar.NewDate(storedReminder.NotifyAt)
+	if timeToEvent.Add(-5 * time.Minute).IsPast() {
+		return 0, errors2.NewShiftError(timeToEvent.Until())
+	}
+
+	timeToEvent = timeToEvent.Add(-5 * time.Minute)
+
+	return timeToEvent.Until(), nil
 }

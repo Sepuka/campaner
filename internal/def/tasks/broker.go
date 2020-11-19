@@ -24,6 +24,7 @@ func init() {
 						domain.StatusCopied:   ctx.Get(broker.CopyBrokerDef).(tasks.Broker),
 						domain.StatusCanceled: ctx.Get(broker.CancelBrokerDef).(tasks.Broker),
 						domain.StatusShifted:  ctx.Get(broker.ShiftBrokerDef).(tasks.Broker),
+						domain.StatusBarren:   ctx.Get(broker.BarrenBrokerDef).(tasks.Broker),
 					}
 				)
 
