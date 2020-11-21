@@ -74,6 +74,8 @@ func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2
 
 	if calendar.IsNotSoon(reminder.When) {
 		keyboard.Buttons = cancelWithEve(reminder.ReminderId)
+	} else if reminder.IsCancelled() {
+		keyboard.Buttons = [][]domain.Button{}
 	}
 
 	if js, err = json.Marshal(keyboard); err != nil {

@@ -8,7 +8,7 @@ import (
 
 const (
 	TextButtonType   domain.ButtonType = `text`
-	CancelButton     domain.ButtonText = `cancel`
+	CancelButton     domain.ButtonText = `отменить`
 	OKButton         domain.ButtonText = `OK`
 	Later15MinButton domain.ButtonText = `через 15 минут`
 	Before5Minutes   domain.ButtonText = `за 5 минут`
