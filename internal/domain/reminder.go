@@ -107,3 +107,7 @@ func (r *Reminder) GetSubject() string {
 func (r *Reminder) String() string {
 	return fmt.Sprintf(`"%s" at %s`, r.What, r.NotifyAt.Format(`2006-01-02 15:04:05`))
 }
+
+func (r *Reminder) IsCancelled() bool {
+	return r.Status == StatusCanceled
+}

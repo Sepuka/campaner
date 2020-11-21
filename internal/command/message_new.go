@@ -80,34 +80,38 @@ func (obj *MessageNew) Exec(req *context.Request, resp http.ResponseWriter) erro
 		return err
 	}
 
-	if !reminder.IsImmediate() {
-		go obj.confirmMsg(reminder)
-	}
+	go obj.confirmMsg(reminder)
 
 	return err
 }
 
 func (obj *MessageNew) confirmMsg(reminder *domain.Reminder) {
 	var (
-		err  error
-		text string
-		whom = reminder.Whom
+		err              error
+		text, notifyTmpl string
+		whom             = reminder.Whom
 
 		notificationTime  = time.Now().Add(reminder.When)
 		todayMidnight     = calendar.NextMidnight()
 		yesterdayMidnight = calendar.LastMidnight()
 	)
 
-	switch {
-	case notificationTime.Before(todayMidnight):
-		notifyTmpl := `напомню сегодня в %02d:%02d:%02d`
-		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute(), notificationTime.Second())
-	case notificationTime.Before(yesterdayMidnight):
-		notifyTmpl := `напомню завтра в %02d:%02d`
-		text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
-	default:
-		notifyTmpl := `напомню об этом %d.%02d в %02d:%02d`
-		text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
+	if reminder.IsCancelled() {
+		text = `напоминание отменено`
+	} else if reminder.IsImmediate() == false {
+		switch {
+		case notificationTime.Before(todayMidnight):
+			notifyTmpl = `напомню сегодня в %02d:%02d:%02d`
+			text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute(), notificationTime.Second())
+		case notificationTime.Before(yesterdayMidnight):
+			notifyTmpl = `напомню завтра в %02d:%02d`
+			text = fmt.Sprintf(notifyTmpl, notificationTime.Hour(), notificationTime.Minute())
+		default:
+			notifyTmpl = `напомню об этом %d.%02d в %02d:%02d`
+			text = fmt.Sprintf(notifyTmpl, notificationTime.Day(), notificationTime.Month(), notificationTime.Hour(), notificationTime.Minute())
+		}
+	} else {
+		return
 	}
 
 	if err = obj.api.SendIntention(whom, text, reminder); err != nil {

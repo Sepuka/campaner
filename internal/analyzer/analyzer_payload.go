@@ -40,11 +40,6 @@ func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder
 	case method.CancelButton:
 		reminder.ReminderId = int(taskId)
 		reminder.Status = domain.StatusCanceled
-		// TODO снабдить reminder возможностью указывать кнопки, например  json keybord в новом поле бд
-		// затем тут можно будет сделать так
-		//reminder.Subject = []string{`напоминание отменено`}
-		//reminder.When = time.Nanosecond
-		// и юзер получит ответ без кнопок
 	case method.Later15MinButton:
 		reminder.Status = domain.StatusCopied
 		reminder.ReminderId = int(taskId)
