@@ -7,6 +7,7 @@ const (
 	MinDayOfMonth = 1
 	MaxDayOfMonth = 31
 	sunday        = time.Saturday + 1
+	Meridiem      = 12
 	Day           = time.Hour * 24
 	Year          = Day * daysOfAYear
 )

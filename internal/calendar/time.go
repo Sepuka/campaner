@@ -12,7 +12,20 @@ import (
 	"github.com/sepuka/campaner/internal/errors"
 )
 
-func findTimeOfADay(date *Date, speech *speeches.Speech) (*Date, error) {
+type (
+	TimeOfADay struct {
+	}
+	OnTime struct {
+	}
+	OverTime struct {
+	}
+	OnNextTimePeriod struct {
+	}
+	OnNextTimeHour struct {
+	}
+)
+
+func (t *TimeOfADay) Parser(date *Date, speech *speeches.Speech) (*Date, error) {
 	var (
 		pattern *speeches.Pattern
 		err     error
@@ -38,7 +51,7 @@ func findTimeOfADay(date *Date, speech *speeches.Speech) (*Date, error) {
 	return date, speech.ApplyPattern(pattern)
 }
 
-func onTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
+func (t *OnTime) Parser(date *Date, speech *speeches.Speech) (*Date, error) {
 	const patternLength = 2
 	var (
 		atTime              time.Time
@@ -89,7 +102,7 @@ func onTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 	return NewDate(atTime), nil
 }
 
-func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
+func (t *OverTime) Parser(date *Date, speech *speeches.Speech) (*Date, error) {
 	const (
 		shortPatternLength = 2
 		fullPatternLength  = 3
@@ -144,31 +157,44 @@ func overTimeParser(date *Date, speech *speeches.Speech) (*Date, error) {
 	return minutesTail(date, speech)
 }
 
-func onNextTimePeriod(date *Date, speech *speeches.Speech) (*Date, error) {
-	const patternLength = 3
+func (t *OnNextTimePeriod) Parser(date *Date, speech *speeches.Speech) (*Date, error) {
+	const (
+		shortPatternLength = 3
+		longPatternLength  = 4
+		expectedOrigin     = `в`
+	)
 	var (
-		atTime            time.Time
-		err               error
-		moment, dimension string
-		value             float64
-		timeFrame         *domain.TimeFrame
-		pattern           *speeches.Pattern
+		atTime                      time.Time
+		err                         error
+		moment, dimension, meridiem string
+		value                       float64
+		timeFrame                   *domain.TimeFrame
+		pattern                     *speeches.Pattern
 	)
 
-	if pattern, err = speech.TryPattern(patternLength); err != nil {
-		return date, err
+	if pattern, err = speech.TryPattern(longPatternLength); err != nil {
+		if pattern, err = speech.TryPattern(shortPatternLength); err != nil {
+			return date, err
+		}
+		if err = pattern.MakeOut(nil, &moment, &dimension); err != nil {
+			return date, err
+		}
+	} else {
+		if err = pattern.MakeOut(nil, &moment, &dimension, &meridiem); err != nil {
+			return date, err
+		}
 	}
 
-	if pattern.Origin() != `в` {
+	if pattern.Origin() != expectedOrigin {
 		return nil, errors.NewNotATimeError()
 	}
 
-	if err = pattern.MakeOut(nil, &moment, &dimension); err != nil {
-		return date, err
+	if value, err = strconv.ParseFloat(moment, 64); err != nil {
+		return nil, errors.NewNotATimeError()
 	}
 
-	if value, err = strconv.ParseFloat(moment, 9); err != nil {
-		return nil, errors.NewNotATimeError()
+	if meridiem == `дня` && value < Meridiem {
+		value += Meridiem
 	}
 
 	timeFrame = domain.NewTimeFrame(value, dimension)
@@ -179,7 +205,7 @@ func onNextTimePeriod(date *Date, speech *speeches.Speech) (*Date, error) {
 	return NewDate(atTime), speech.ApplyPattern(pattern)
 }
 
-func onNextTimeHourPeriod(date *Date, speech *speeches.Speech) (*Date, error) {
+func (t *OnNextTimeHour) Parser(date *Date, speech *speeches.Speech) (*Date, error) {
 	const patternLength = 2
 	var (
 		atTime              *Date

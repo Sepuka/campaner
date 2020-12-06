@@ -8,13 +8,27 @@ import (
 	"github.com/sepuka/campaner/internal/errors"
 )
 
-type Date struct {
-	date time.Time
-}
+type (
+	Parser interface {
+		Parser(date *Date, speech *speeches.Speech) (*Date, error)
+	}
+
+	Date struct {
+		date        time.Time
+		timeParsers []Parser
+	}
+)
 
 func NewDate(date time.Time) *Date {
 	return &Date{
 		date: date,
+		timeParsers: []Parser{
+			&TimeOfADay{},
+			&OnTime{},
+			&OverTime{},
+			&OnNextTimePeriod{},
+			&OnNextTimeHour{},
+		},
 	}
 }
 
@@ -43,24 +57,10 @@ func (d *Date) ApplyTime(speech *speeches.Speech) (*Date, error) {
 		err      error
 	)
 
-	if dateTime, err = findTimeOfADay(d, speech); err == nil {
-		return dateTime, nil
-	}
-
-	if dateTime, err = onTimeParser(d, speech); err == nil {
-		return dateTime, nil
-	}
-
-	if dateTime, err = overTimeParser(d, speech); err == nil {
-		return dateTime, nil
-	}
-
-	if dateTime, err = onNextTimePeriod(d, speech); err == nil {
-		return dateTime, nil
-	}
-
-	if dateTime, err = onNextTimeHourPeriod(d, speech); err == nil {
-		return dateTime, nil
+	for _, parser := range d.timeParsers {
+		if dateTime, err = parser.Parser(d, speech); err == nil {
+			return dateTime, nil
+		}
 	}
 
 	return d, errors.NewNotATimeError()

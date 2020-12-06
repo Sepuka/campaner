@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sepuka/campaner/internal/calendar"
+
 	"github.com/sepuka/campaner/internal/speeches"
 
 	"github.com/sepuka/campaner/internal/domain"
@@ -105,9 +107,9 @@ func TestOverTimeParser(t *testing.T) {
 func TestOnTimeParser(t *testing.T) {
 	parser := NewTimeParser()
 	now := time.Now()
-	nextDateTime := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, time.Local)
+	timePM := time.Date(now.Year(), now.Month(), now.Day(), 15, 0, 0, 0, time.Local)
 	if now.Hour() >= 15 {
-		nextDateTime = nextDateTime.Add(24 * time.Hour)
+		timePM = timePM.Add(calendar.Day)
 	}
 
 	var testCases = map[string]struct {
@@ -119,20 +121,26 @@ func TestOnTimeParser(t *testing.T) {
 			speech: speeches.NewSpeech(`в 15:00 совершить действие`),
 			rest:   []string{`совершить`, `действие`},
 			reminder: &domain.Reminder{
-				When: time.Until(nextDateTime),
+				When: time.Until(timePM),
 			},
 		},
 		`в 15 часов совершить действие`: {
 			speech: speeches.NewSpeech(`в 15 часов совершить действие`),
 			rest:   []string{`совершить`, `действие`},
 			reminder: &domain.Reminder{
-				When: time.Until(nextDateTime),
+				When: time.Until(timePM),
 			},
 		},
 		`в 15 совещание`: {
 			speech: speeches.NewSpeech(`в 15 совещание`),
 			reminder: &domain.Reminder{
-				When: time.Until(nextDateTime),
+				When: time.Until(timePM),
+			},
+		},
+		`в 3 часа дня совещание`: {
+			speech: speeches.NewSpeech(`в 3 часа дня совещание`),
+			reminder: &domain.Reminder{
+				When: time.Until(timePM),
 			},
 		},
 	}
