@@ -111,3 +111,7 @@ func (r *Reminder) String() string {
 func (r *Reminder) IsCancelled() bool {
 	return r.Status == StatusCanceled
 }
+
+func (r *Reminder) IsBarren() bool {
+	return r.Status == StatusBarren
+}

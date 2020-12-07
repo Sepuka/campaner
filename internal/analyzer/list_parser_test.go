@@ -61,7 +61,7 @@ func TestListNotificationsAnalyzer_noTasks(t *testing.T) {
 
 	var parser = NewListParser(repo)
 	err = parser.Parse(speech, actualReminder)
-	assert.Equal(t, expectedText, actualReminder.What)
+	assert.Equal(t, expectedText, actualReminder.GetSubject())
 	assert.NoError(t, err)
 
 	patternWasApplied(t, speech)

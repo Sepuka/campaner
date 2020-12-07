@@ -49,7 +49,7 @@ func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 	}
 
 	if models == nil {
-		reminder.What = emptyTasksList
+		reminder.RewriteSubject(emptyTasksList)
 	} else {
 		var (
 			schedule = make([]string, 0, len(models))
@@ -64,6 +64,7 @@ func (obj *ListParser) Parse(speech *speeches.Speech, reminder *domain.Reminder)
 	}
 
 	reminder.When = time.Second
+	reminder.Status = domain.StatusBarren
 
 	return speech.ApplyPattern(pattern)
 }

@@ -98,6 +98,8 @@ func (obj *MessageNew) confirmMsg(reminder *domain.Reminder) {
 
 	if reminder.IsCancelled() {
 		text = `напоминание отменено`
+	} else if reminder.IsBarren() {
+		text = reminder.GetSubject()
 	} else if reminder.IsImmediate() == false {
 		switch {
 		case notificationTime.Before(todayMidnight):
