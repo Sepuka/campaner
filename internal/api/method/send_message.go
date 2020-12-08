@@ -72,10 +72,12 @@ func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2
 		js                []byte
 	)
 
-	if calendar.IsNotSoon(reminder.When) {
+	if reminder.IsShifted() {
+		keyboard.Buttons = cancel(reminder.ReminderId)
+	} else if calendar.IsNotSoon(reminder.When) {
 		keyboard.Buttons = cancelWithEve(reminder.ReminderId)
 	} else if obj.hasNotAnyButtons(reminder) {
-		keyboard.Buttons = [][]domain.Button{} // TODO add Status button
+		keyboard.Buttons = [][]domain.Button{}
 	}
 
 	if js, err = json.Marshal(keyboard); err != nil {
@@ -237,5 +239,6 @@ func (obj *SendMessage) send(msgStruct domain.MessagesSend) error {
 }
 
 func (obj *SendMessage) hasNotAnyButtons(reminder *domain2.Reminder) bool {
-	return reminder.IsCancelled() || reminder.IsBarren() || reminder.IsShifted()
+	// TODO add Status button
+	return reminder.IsCancelled() || reminder.IsBarren()
 }
