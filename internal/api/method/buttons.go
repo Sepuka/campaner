@@ -15,7 +15,26 @@ const (
 	OnTheEve         domain.ButtonText = `накануне вечером`
 )
 
+func withoutButtons() [][]domain.Button {
+	return [][]domain.Button{}
+}
+
 func cancel(cancelId int) [][]domain.Button {
+	return [][]domain.Button{
+		{
+			{
+				Color: `negative`,
+				Action: domain.Action{
+					Type:    TextButtonType,
+					Label:   CancelButton,
+					Payload: domain.ButtonPayload{Button: strconv.Itoa(cancelId)}.String(),
+				},
+			},
+		},
+	}
+}
+
+func cancelWith5Minutes(cancelId int) [][]domain.Button {
 	return [][]domain.Button{
 		{
 			{

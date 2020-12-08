@@ -56,7 +56,6 @@ func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2
 		params   url2.Values
 		keyboard = domain.Keyboard{
 			OneTime: true,
-			Buttons: cancel(reminder.ReminderId),
 		}
 
 		payload = domain.MessagesSend{
@@ -72,12 +71,15 @@ func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2
 		js                []byte
 	)
 
-	if reminder.IsShifted() {
+	switch {
+	case reminder.IsShifted():
 		keyboard.Buttons = cancel(reminder.ReminderId)
-	} else if calendar.IsNotSoon(reminder.When) {
+	case calendar.IsNotSoon(reminder.When):
 		keyboard.Buttons = cancelWithEve(reminder.ReminderId)
-	} else if obj.hasNotAnyButtons(reminder) {
-		keyboard.Buttons = [][]domain.Button{}
+	case obj.hasNotAnyButtons(reminder):
+		keyboard.Buttons = withoutButtons()
+	default:
+		keyboard.Buttons = cancelWith5Minutes(reminder.ReminderId)
 	}
 
 	if js, err = json.Marshal(keyboard); err != nil {
