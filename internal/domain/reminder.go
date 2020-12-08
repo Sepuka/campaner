@@ -115,3 +115,7 @@ func (r *Reminder) IsCancelled() bool {
 func (r *Reminder) IsBarren() bool {
 	return r.Status == StatusBarren
 }
+
+func (r *Reminder) IsShifted() bool {
+	return r.Status == StatusShifted
+}
