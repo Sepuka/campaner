@@ -34,7 +34,7 @@ func TestListNotificationsAnalyzer(t *testing.T) {
 		expectedText   = "\"The first scheduled notification\" at 1984-08-31 00:00:00\r\n" +
 			"\"The second scheduled notification\" at 2000-12-31 23:59:59"
 		err    error
-		speech = speeches.NewSpeech(`список`)
+		speech = speeches.NewSpeech(list.String())
 	)
 
 	repo.On(`Scheduled`, mock.Anything, mock.Anything).Return(reminders, nil)
@@ -54,7 +54,7 @@ func TestListNotificationsAnalyzer_noTasks(t *testing.T) {
 		actualReminder = domain.NewImmediateReminder(0, ``)
 		expectedText   = `There aren't any tasks yet`
 		err            error
-		speech         = speeches.NewSpeech(`список`)
+		speech         = speeches.NewSpeech(list.String())
 	)
 
 	repo.On(`Scheduled`, mock.Anything, mock.Anything).Return(reminders, nil)
@@ -74,5 +74,5 @@ func patternWasApplied(t *testing.T, speech *speeches.Speech) {
 	)
 	pattern, err = speech.TryPattern(1)
 	assert.Nil(t, pattern, `pattern must be empty after applying`)
-	assert.EqualError(t, err, errors.NewSpeechIsOverError(1, `список`).Error())
+	assert.EqualError(t, err, errors.NewSpeechIsOverError(1, list.String()).Error())
 }

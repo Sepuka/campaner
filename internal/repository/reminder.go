@@ -76,7 +76,7 @@ func (r *ReminderRepository) Scheduled(userId int, limit uint32) ([]domain.Remin
 	err = r.
 		db.
 		Model(&models).
-		Where(`notify_at > ? AND user_id = ?`, time.Now(), userId).
+		Where(`notify_at > ? AND user_id = ? AND status = ?`, time.Now(), userId, domain.StatusNew).
 		Limit(int(limit)).
 		Select()
 
