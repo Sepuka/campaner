@@ -1,11 +1,9 @@
 package analyzer
 
 import (
-	"time"
+	"encoding/json"
 
-	"github.com/sepuka/campaner/internal/api/method"
-
-	payload2 "github.com/sepuka/campaner/internal/analyzer/payload"
+	"github.com/sepuka/campaner/internal/analyzer/payload"
 
 	"github.com/sepuka/campaner/internal/errors"
 
@@ -18,40 +16,48 @@ import (
 
 func (a *Analyzer) analyzePayload(msg context.Message, reminder *domain.Reminder) error {
 	var (
-		err        error
-		taskId     int64
-		rawPayload = msg.Payload
-		text       = domainApi.ButtonText(msg.Text)
+		err         error
+		rawPayload  = msg.Payload
+		payloadData domainApi.ButtonPayload
 	)
 
-	if taskId, err = payload2.GetTaskId(rawPayload); err != nil {
-		a.
-			logger.
-			With(
-				zap.String(`json`, rawPayload),
-				zap.Int(`user_id`, reminder.Whom),
-				zap.Error(err),
-			).
-			Error(`cannot parse task_id`)
-		return errors.NewInvalidSpeechPayloadButtonError(msg, err)
+	if err = json.Unmarshal([]byte(rawPayload), &payloadData); err != nil {
+		return a.buildPayloadError(msg, reminder.Whom, err, `invalid JSON`)
 	}
 
-	switch text {
-	case method.CancelButton:
-		reminder.ReminderId = int(taskId)
-		reminder.Status = domain.StatusCanceled
-	case method.Later15MinButton:
-		reminder.Status = domain.StatusCopied
-		reminder.ReminderId = int(taskId)
-		reminder.When = time.Duration(15) * time.Minute
-	case method.OKButton:
-		reminder.ReminderId = int(taskId)
-		reminder.Status = domain.StatusBarren
-	case method.OnTheEve, method.Before5Minutes:
-		reminder.ReminderId = int(taskId)
-		reminder.Status = domain.StatusShifted
-		reminder.RewriteSubject(msg.Text)
+	switch {
+	case payloadData.IsStartButton():
+		if err = payload.HandleStartButtonPayload(payloadData, reminder); err != nil {
+			return a.buildPayloadError(msg, reminder.Whom, err, `something wrong with start button`)
+		}
+	case payloadData.IsChangeTaskButton():
+		if err = payload.HandleChangeTaskPayload(msg.Text, payloadData, reminder); err != nil {
+			return a.buildPayloadError(msg, reminder.Whom, err, `cannot parse task_id`)
+		}
+	case payloadData.IsOKButton():
+		if err = payload.HandleOKButtonPayload(msg.Text, payloadData, reminder); err != nil {
+			return a.buildPayloadError(msg, reminder.Whom, err, `cannot handle OK button`)
+		}
+	default:
+		return a.buildPayloadError(msg, reminder.Whom, err, `got unknown button payload`)
 	}
 
 	return nil
+}
+
+func (a *Analyzer) buildPayloadError(msg context.Message, userId int, err error, text string) error {
+	var (
+		rawPayload = msg.Payload
+	)
+
+	a.
+		logger.
+		With(
+			zap.String(`json`, rawPayload),
+			zap.Int(`user_id`, userId),
+			zap.Error(err),
+		).
+		Error(text)
+
+	return errors.NewInvalidSpeechPayloadButtonError(msg, err)
 }

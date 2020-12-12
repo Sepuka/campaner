@@ -3,8 +3,7 @@ package broker
 import (
 	"time"
 
-	domain2 "github.com/sepuka/campaner/internal/api/domain"
-	"github.com/sepuka/campaner/internal/api/method"
+	domain3 "github.com/sepuka/campaner/internal/command/domain"
 
 	errors2 "github.com/sepuka/campaner/internal/errors"
 
@@ -45,11 +44,13 @@ func (b *ShiftBroker) Service(reminder *domain.Reminder) error {
 		return errors2.NewWrongStatusError(storedReminder.Status, domain.StatusNew)
 	}
 
-	switch domain2.ButtonText(reminder.GetSubject()) {
-	case method.OnTheEve:
+	switch reminder.GetSubject() {
+	case domain3.CommandOnTheEveId.String():
 		reminder.When, err = b.onTheEve(storedReminder)
-	case method.Before5Minutes:
+	case domain3.CommandBefore5Minutes.String():
 		reminder.When, err = b.before5Minutes(storedReminder)
+	default:
+		return errors2.NewShiftError(0) //TODO tmp
 	}
 
 	if err != nil {
