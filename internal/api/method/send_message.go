@@ -3,7 +3,6 @@ package method
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	url2 "net/url"
@@ -33,6 +32,7 @@ type (
 		client        api.HTTPClient
 		logger        *zap.SugaredLogger
 		featureToggle featureDomain.FeatureToggle
+		rnd           domain.Rnder
 	}
 )
 
@@ -41,12 +41,14 @@ func NewSendMessage(
 	client api.HTTPClient,
 	logger *zap.SugaredLogger,
 	feature featureDomain.FeatureToggle,
+	rnd domain.Rnder,
 ) *SendMessage {
 	return &SendMessage{
 		cfg:           cfg,
 		client:        client,
 		logger:        logger,
 		featureToggle: feature,
+		rnd:           rnd,
 	}
 }
 
@@ -63,7 +65,7 @@ func (obj *SendMessage) SendIntention(peerId int, text string, reminder *domain2
 			AccessToken: obj.cfg.Api.Token,
 			ApiVersion:  api.Version,
 			PeerId:      peerId,
-			RandomId:    rand.Int63(),
+			RandomId:    obj.rnd.Rnd(),
 		}
 
 		maskedAccessToken = fmt.Sprintf(`%s...`, obj.cfg.Api.Token[0:3])
@@ -106,7 +108,7 @@ func (obj *SendMessage) SendNotification(peerId int, text string, remindId int) 
 			AccessToken: obj.cfg.Api.Token,
 			ApiVersion:  api.Version,
 			PeerId:      peerId,
-			RandomId:    api.Rnd(),
+			RandomId:    obj.rnd.Rnd(),
 		}
 		err      error
 		js       []byte
@@ -140,7 +142,7 @@ func (obj *SendMessage) SendFlat(peerId int, text string) error {
 			AccessToken: obj.cfg.Api.Token,
 			ApiVersion:  api.Version,
 			PeerId:      peerId,
-			RandomId:    api.Rnd(),
+			RandomId:    obj.rnd.Rnd(),
 		}
 	)
 

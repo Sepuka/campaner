@@ -21,3 +21,4 @@ tests:
 
 mocks:
 	mockery -all -dir internal/domain -output internal/repository/mocks
+	mockery -all -dir internal/api/domain -output internal/api/mocks
